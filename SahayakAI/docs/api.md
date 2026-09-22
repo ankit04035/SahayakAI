@@ -124,3 +124,92 @@ Triggers or re-runs embedding generation across all chunks of an uploaded docume
   "status": "completed"
 }
 ```
+
+---
+
+## 4. Chat & Study Assistant Endpoints
+
+### `POST /api/chat/sessions`
+Creates a new conversational chat session.
+
+- **Request Body (`application/json`):**
+```json
+{
+  "title": "Operating Systems Revision",
+  "document_id": 1,
+  "user_id": null
+}
+```
+- **Response (201 Created):**
+```json
+{
+  "id": 1,
+  "user_id": 1,
+  "title": "Operating Systems Revision",
+  "document_id": 1,
+  "created_at": "2026-09-22T16:00:00Z",
+  "updated_at": "2026-09-22T16:00:00Z"
+}
+```
+
+### `GET /api/chat/sessions`
+Lists chat sessions belonging to the user.
+- **Query Parameters:** `document_id` (optional), `user_id` (optional)
+- **Headers:** `X-User-Id` (optional)
+
+### `GET /api/chat/sessions/{session_id}`
+Retrieves session metadata. Enforces user ownership (403 if unauthorized).
+
+### `DELETE /api/chat/sessions/{session_id}`
+Deletes a chat session and cascades deletion to all messages.
+
+### `POST /api/chat/sessions/{session_id}/messages`
+Submits a user question to the study assistant.
+- **Request Body (`application/json`):**
+```json
+{
+  "message": "What is thrashing and how does the OS mitigate it?",
+  "top_k": 3,
+  "similarity_threshold": 0.35
+}
+```
+- **Response (200 OK — Grounded Document Answer):**
+```json
+{
+  "session_id": 1,
+  "user_message": {
+    "id": 10,
+    "session_id": 1,
+    "role": "user",
+    "content": "What is thrashing and how does the OS mitigate it?",
+    "created_at": "2026-09-22T16:05:00Z"
+  },
+  "assistant_message": {
+    "id": 11,
+    "session_id": 1,
+    "role": "assistant",
+    "content": "Thrashing occurs when a computer's virtual memory subsystem...",
+    "source_metadata": {
+      "grounded": true,
+      "insufficient_evidence": false,
+      "sources": [{"chunk_id": 4, "chunk_index": 2, "page": 1, "similarity": 0.6195}]
+    },
+    "created_at": "2026-09-22T16:05:01Z"
+  },
+  "grounded": true,
+  "insufficient_evidence": false,
+  "sources": [
+    {
+      "chunk_id": 4,
+      "chunk_index": 2,
+      "page": 1,
+      "similarity": 0.6195
+    }
+  ],
+  "provider": "demo",
+  "model": "demo-deterministic"
+}
+```
+
+### `GET /api/chat/sessions/{session_id}/messages`
+Retrieves chronological message history for a session.

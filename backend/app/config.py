@@ -155,6 +155,32 @@ class Settings(BaseSettings):
         description="Maximum question character length",
     )
 
+    # Chat and Study Assistant Settings (Step 8)
+    CHAT_MAX_MESSAGE_CHARS: int = Field(
+        default=4000,
+        gt=0,
+        le=20000,
+        description="Maximum character length for a single chat message",
+    )
+    CHAT_HISTORY_MAX_MESSAGES: int = Field(
+        default=10,
+        gt=0,
+        le=50,
+        description="Maximum number of previous messages included in prompt history",
+    )
+    CHAT_MAX_HISTORY_CHARS: int = Field(
+        default=6000,
+        gt=100,
+        le=50000,
+        description="Maximum cumulative characters of prior conversation history in prompt",
+    )
+    CHAT_MAX_TITLE_CHARS: int = Field(
+        default=255,
+        gt=0,
+        le=255,
+        description="Maximum character length for chat session title",
+    )
+
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:

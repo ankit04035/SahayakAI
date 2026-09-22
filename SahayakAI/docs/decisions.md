@@ -177,3 +177,20 @@ Implement `DemoProvider` as the first-class default provider (`AI_PROVIDER=demo`
 1. **Zero-Friction Evaluation**: Anyone can clone and run the application instantly without external cloud accounts.
 2. **Deterministic Test Verification**: Tests run identically and predictably without flaky network timeouts or non-deterministic token sampling.
 3. **Honest Grounding**: When no reference context is supplied for document-grounded queries, the demo provider explicitly warns that no context exists rather than hallucinating answers.
+
+---
+
+## ADR-11: Study Assistant & Document-Grounded Chat Architecture
+
+### Context
+Users require conversational study assistance combining multi-turn interactive dialogues with document-grounded question answering and general technical mentoring.
+
+### Decision
+Implement chat orchestration in a dedicated service layer (`backend/app/services/chat_service.py`), leveraging existing domain models (`ChatSession`, `ChatMessage`), existing RAG retrieval (`retrieve_chunks`), and existing AI provider abstractions (`get_provider()`).
+
+### Rationale
+1. **Separation of Concerns**: Chat session state, message persistence, and bounded history management are decoupled from low-level RAG vector arithmetic and raw LLM clients.
+2. **Context Branching**: Automatically branches between document-grounded RAG (when `session.document_id` exists) and general study mentoring (when `document_id` is `None`), eliminating unnecessary vector lookups.
+3. **Threshold-Gated Cost Savings**: If document retrieval falls below `RAG_SIMILARITY_THRESHOLD`, the service terminates early with an honest insufficient-evidence response without incurring LLM token costs or risking hallucinations.
+4. **Bounded Conversation History**: Sliding-window history truncation capped at 10 messages and 6,000 characters guarantees whole-message preservation while defending against context overflow.
+5. **Zero-Key Deterministic Demo Mode**: Fully compatible with `DemoProvider` for reproducible offline evaluation and automated testing.

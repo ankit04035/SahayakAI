@@ -22,7 +22,10 @@ from backend.app.schemas.chat import (
     ChatMessageRead,
     ChatSessionBase,
     ChatSessionCreate,
+    ChatSessionUpdate,
     ChatSessionRead,
+    ChatRequest,
+    ChatResponse,
 )
 from backend.app.schemas.resume import (
     ResumeBase,
@@ -69,7 +72,10 @@ __all__ = [
     "ChatMessageRead",
     "ChatSessionBase",
     "ChatSessionCreate",
+    "ChatSessionUpdate",
     "ChatSessionRead",
+    "ChatRequest",
+    "ChatResponse",
     "ResumeBase",
     "ResumeCreate",
     "ResumeUpdate",

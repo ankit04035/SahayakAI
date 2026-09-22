@@ -18,9 +18,9 @@ def sanitize_sensitive_data(message: str) -> str:
         message = str(message)
 
     # Mask OpenAI-style keys (sk-...)
-    message = re.sub(r"sk-[a-zA-Z0-9_\-]{16,}", "sk-***REDACTED***", message)
+    message = re.sub(r"sk-[a-zA-Z0-9_\-]{8,}", "sk-***REDACTED***", message)
     # Mask Gemini-style keys (AIza...)
-    message = re.sub(r"AIza[a-zA-Z0-9_\-]{16,}", "AIza***REDACTED***", message)
+    message = re.sub(r"AIza[a-zA-Z0-9_\-]{8,}", "AIza***REDACTED***", message)
     # Mask Bearer tokens
     message = re.sub(r"Bearer\s+[a-zA-Z0-9_\-\.]{10,}", "Bearer ***REDACTED***", message, flags=re.IGNORECASE)
     # Mask key=... or api_key=... patterns

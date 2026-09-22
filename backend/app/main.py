@@ -14,6 +14,7 @@ from backend.app.exceptions import register_exception_handlers
 from backend.app.logging_config import setup_logging
 from backend.app.routes.health import router as health_router
 from backend.app.routes.documents import router as documents_router
+from backend.app.routes.chat import router as chat_router
 
 settings = get_settings()
 logger = setup_logging(settings.LOG_LEVEL)
@@ -65,6 +66,7 @@ def create_app() -> FastAPI:
     # Register API routers
     app.include_router(health_router, prefix="/api")
     app.include_router(documents_router, prefix="/api")
+    app.include_router(chat_router, prefix="/api")
 
     return app
 

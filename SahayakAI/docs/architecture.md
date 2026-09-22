@@ -2,7 +2,7 @@
 
 **Status:** ACTIVE  
 **Version:** 1.2.0  
-**Current Phase:** Completed STEP 6 (Transformer / Sentence-Embedding Layer)
+**Current Phase:** Completed STEP 8 (Study Assistant & Document-Grounded Chat)
 
 ---
 
@@ -17,8 +17,9 @@ The platform is designed following strict layered architecture principles:
    - Ingestion & Extraction Services (`backend/app/services/document_service.py` via PyMuPDF and UTF-8 multi-encoding decoding).
    - Core NLP Engine (`backend/app/nlp/` — deterministic text cleaner, reading statistics, script-based language identification, multilingual keyword extraction, query preprocessor, boundary-aware sliding window chunker).
    - Embedding & Transformer Engine (`backend/app/rag/` — `all-MiniLM-L6-v2` 384-dimensional sentence-transformers, L2 normalization, in-process model caching, batch encoding, JSON vector persistence).
-   - Local RAG Retrieval Engine (Future STEP 7 — NumPy matrix operations, cosine similarity search).
-   - Resume ATS Skill Gap Analyzer (Future STEP 8).
+   - Local RAG Retrieval Engine (STEP 7 Completed — NumPy dot product, cosine similarity search, threshold gating).
+   - Study Assistant & Grounded Chat Service (STEP 8 Completed — multi-turn dialogue, bounded history, citation tracking).
+   - Resume ATS Skill Gap Analyzer (Future STEP 9).
    - Dynamic Career Roadmap Synthesizer (Future STEP 9).
 4. **AI Provider Abstraction Layer**: Generic `BaseAIProvider` decoupling domain logic from concrete LLMs (`DemoProvider`, `OpenAICompatibleProvider`, `GeminiProvider`).
 5. **Persistence Layer**: SQLAlchemy 2.0 ORM with SQLite default storage (`data/sahayakai.db`) and strict referential integrity (`PRAGMA foreign_keys=ON`).
