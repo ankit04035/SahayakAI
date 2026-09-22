@@ -1,0 +1,27 @@
+# ==============================================================================
+# SahayakAI - Core Dependencies (Architecture Freeze Baseline)
+# ==============================================================================
+
+# --- Web Framework & ASGI Server ---
+fastapi>=0.110.0,<1.0.0
+uvicorn[standard]>=0.28.0,<1.0.0
+
+# --- Settings & Data Validation ---
+pydantic>=2.6.0,<3.0.0
+pydantic-settings>=2.2.0,<3.0.0
+python-dotenv>=1.0.1,<2.0.0
+
+# --- Request Handling & Networking ---
+python-multipart>=0.0.9
+httpx>=0.27.0,<1.0.0
+
+# --- Document Parsing (Resume Analyzer) ---
+pypdf>=4.1.0,<5.0.0
+python-docx>=1.1.0,<2.0.0
+
+# --- Numerical & Embedding Utilities (Base) ---
+numpy>=1.26.0,<2.0.0
+
+# --- Testing Framework ---
+pytest>=8.0.0,<9.0.0
+pytest-asyncio>=0.23.0,<1.0.0

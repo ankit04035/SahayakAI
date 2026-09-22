@@ -1,0 +1,114 @@
+# ==============================================================================
+# SahayakAI - Secure .gitignore
+# ==============================================================================
+
+# --- Secrets & Environment Variables ---
+.env
+.env.*
+!.env.example
+
+# --- Python Virtual Environments ---
+.venv
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# --- Python Bytecode & Cache Directories ---
+__pycache__
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# --- Node Modules & Frontend Build Artifacts ---
+node_modules
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.next/
+frontend/out/
+.npm
+.eslintcache
+
+# --- Uploads & Temporary Stored User Files ---
+uploads/*
+!uploads/.gitkeep
+SahayakAI/uploads/*
+!SahayakAI/uploads/.gitkeep
+
+# --- Local Databases & Data Stores ---
+*.db
+*.sqlite
+*.sqlite3
+data/*
+!data/.gitkeep
+data/vector_db/
+SahayakAI/data/*
+!SahayakAI/data/.gitkeep
+SahayakAI/data/vector_db/
+
+# --- Generated Model Caches, Weights & Artifacts ---
+models/*
+!models/.gitkeep
+SahayakAI/models/*
+!SahayakAI/models/.gitkeep
+.cache/
+huggingface/
+torch/
+*.bin
+*.pt
+*.pth
+*.onnx
+*.joblib
+*.pkl
+*.model
+
+# --- Temporary Files & OS Specific Files ---
+*.tmp
+*.temp
+*.log
+*.bak
+*.swp
+*~
+tmp/
+temp/
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# --- Testing & Code Analysis Caches ---
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# --- IDE & Editor Settings ---
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
