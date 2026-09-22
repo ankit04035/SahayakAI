@@ -107,4 +107,13 @@ All security mechanisms have been formally verified through synthetic automated 
 | 20 | Cascading Parent Deletion | All Created Resources | HTTP 200 Deleted | PASS |
 | 21 | Orphan-Free DB Verification | Subordinate Chunks/Messages | Cleaned Up (Zero Orphans)| PASS |
 | 22 | SQLite PRAGMA Integrity | `PRAGMA integrity_check;` | Returns 'ok' | PASS |
-| 23 | Secret Leakage Audit | All Workflow Responses | Zero Secrets Leaked | PASS |\n
+| 23 | Secret Leakage Audit | All Workflow Responses | Zero Secrets Leaked | PASS |\n\n---
+
+## 4. Production Cloud Security Posture (Step 15)
+
+In Step 15, the application was prepared and deployed to production cloud infrastructure (Vercel + Render + PostgreSQL):
+1. **Frontend-Backend Decoupling**: The static frontend bundle hosted on Vercel contains **zero** AI provider keys, database credentials, or secret configuration. Only the public API base URL (`VITE_API_BASE_URL`) is exposed.
+2. **CORS Production Origin Whitelisting**: `CORS_ORIGINS` is configured to whitelist only the deployed Vercel domain, rejecting requests from unauthorized origins.
+3. **Database Security**: PostgreSQL connection strings are passed via encrypted environment variables (`DATABASE_URL`). Connection credentials are never committed to git or exposed in client bundles.
+4. **URL Normalization**: Cloud provider `postgres://` connection strings are automatically normalized to `postgresql://` without altering code.
+5. **Isolated Persistent Storage**: File uploads are restricted to `.pdf` and `.txt`, validated for 10MB bounds, and saved with UUID4 prefixes in the dedicated storage volume (`/var/data/uploads`).\n

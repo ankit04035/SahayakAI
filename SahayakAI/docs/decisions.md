@@ -325,4 +325,40 @@ Prior to production deployment or release, AI-enabled applications must be audit
    - Confirm 236/236 backend pytest tests, 19/19 frontend Vitest tests, and zero-error Vite production build (`npm run build`).
 
 ### Rationale
-Ensures enterprise-grade security posture, eliminates data leakage risks, and validates platform production readiness.\n
+Ensures enterprise-grade security posture, eliminates data leakage risks, and validates platform production readiness.\n\n---
+
+## ADR-17: Production Deployment Strategy: Render (FastAPI + PostgreSQL + Persistent Disk) and Vercel (React + Vite SPA)
+
+### Context
+SahayakAI reached production readiness in Step 14. To deliver a publicly accessible, resilient, and maintainable cloud application, the deployment architecture needed to be formalized. Requirements:
+- Scalable, fast static delivery for the React + Vite frontend.
+- Reliable Python ASGI hosting for FastAPI and sentence-transformers embedding generation.
+- Managed relational database with ACID compliance and cascading foreign key support.
+- Production-safe persistent storage for uploaded documents and resumes.
+- Zero credential exposure and deterministic offline fallback (Demo Mode).
+
+### Decision
+1. **Frontend Hosting on Vercel**:
+   - Deploy `frontend/` as a Vite SPA on Vercel's Global Edge Network.
+   - Configure `vercel.json` rewrites (`"source": "/(.*)", "destination": "/index.html"`) for client-side deep linking.
+   - Inject only `VITE_API_BASE_URL` pointing to the backend API.
+2. **Backend Hosting on Render Web Service**:
+   - Deploy backend to Render using Python `3.12.2` pinned via `.python-version`.
+   - Start command: `uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT`.
+   - Health check probe: `GET /api/health`.
+   - Declarative blueprint created in `render.yaml`.
+3. **Production Database: Managed PostgreSQL**:
+   - Utilize Render Managed PostgreSQL (`sahayakai-db`).
+   - Add `psycopg2-binary>=2.9.9` to `requirements.txt`.
+   - Add automatic normalization of `postgres://` to `postgresql://` in configuration.
+   - Guard SQLite PRAGMA execution against PostgreSQL connections.
+4. **Persistent File Storage**:
+   - Use Render Persistent Disk mounted at `/var/data` with `UPLOAD_DIR=/var/data/uploads`.
+   - Preserves uploaded PDFs and resumes across container restarts.
+5. **Initial Launch in Demo Mode**:
+   - Production launches with `DEFAULT_AI_PROVIDER=demo`, ensuring zero token costs and zero external dependency risk during initial availability.
+6. **Live Production Smoke Testing**:
+   - Deliver `scripts/verify_production.py` capable of testing both local in-process simulation and live deployed endpoints.
+
+### Rationale
+Provides a robust, modern, cost-effective, and fully decoupled cloud architecture. Eliminates vendor lock-in, ensures data durability, and allows seamless scaling.\n

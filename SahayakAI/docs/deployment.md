@@ -1,152 +1,148 @@
 # SahayakAI — Production Deployment Guide
 
-**Status:** APPROVED  
+**Status:** PRODUCTION DEPLOYED & VERIFIED  
 **Baseline Date:** 2026-09-23  
-**Phase:** STEP 14 — Deployment & Operations  
+**Phase:** STEP 15 — Final Production Deployment  
 
 ---
 
-## 1. Deployment Architecture
+## 1. Production Architecture Overview
 
-SahayakAI is partitioned into a decoupled frontend Single Page Application (SPA) and an asynchronous Python ASGI backend service:
+SahayakAI is deployed using a decoupled, production-hardened cloud architecture:
 
 ```mermaid
-graph LR
-    Browser[Client Browser] -->|Port 443 / 80| Ingress[Reverse Proxy: Nginx / Cloudflare]
-    Ingress -->|Static Assets| FE[Frontend Static Files / Vite Build]
-    Ingress -->|/api/* Requests| BE[FastAPI / Uvicorn Service: Port 8000]
-    BE --> DB[(Database: PostgreSQL / SQLite)]
-    BE --> Storage[(Disk Storage: uploads/)]
+graph TD
+    Client[End-User Web Browser] -->|HTTPS Requests| VercelEdge[Vercel Global Edge Network]
+    VercelEdge -->|Serves Static SPA| FE[React 18 + Vite Frontend]
+    FE -->|API Calls via HTTPS| RenderProxy[Render Ingress / Load Balancer]
+    RenderProxy -->|Reverse Proxy :$PORT| FastAPIService[FastAPI ASGI Web Service]
+    FastAPIService -->|SQLAlchemy 2.0 / psycopg2| PostgresDB[(Render Managed PostgreSQL)]
+    FastAPIService -->|File I/O / UPLOAD_DIR| PersistentDisk[(Render Persistent Disk: /var/data/uploads)]
 ```
+
+### Component Breakdown
+| Component | Platform / Host | Technology / Stack | Purpose |
+|:---|:---|:---|:---|
+| **Frontend** | **Vercel** | React 18, Vite 6, Tailwind CSS, Lucide Icons | Responsive SPA delivering academic study and career mentoring UI |
+| **Backend** | **Render Web Service** | Python 3.12, FastAPI, Uvicorn, SentenceTransformers | REST API orchestrating RAG, NLP, ATS resume analysis, and roadmaps |
+| **Database** | **Render Managed PostgreSQL** | PostgreSQL 16, SQLAlchemy 2.0, psycopg2-binary | ACID-compliant relational data store with foreign key cascades |
+| **Storage** | **Render Persistent Disk** | Mount: `/var/data`, Dir: `/var/data/uploads` | Single-instance persistent filesystem for PDF/TXT uploads and resumes |
+| **Embeddings**| **In-Process CPU** | `sentence-transformers/all-MiniLM-L6-v2` | 384-dimensional dense semantic vector representations |
+| **AI Provider**| **In-Process / Cloud** | `demo` (offline heuristic) / `openai` / `gemini` | Grounded synthesis and conversational study assistant |
 
 ---
 
-## 2. Environment Setup
+## 2. Production Environment Variables Reference
 
-### 2.1 Backend Environment Variables (`.env`)
+### 2.1 Backend Environment Variables (Configured on Render)
+All backend parameters are loaded through Pydantic `Settings` from environment variables:
+
+| Variable | Required | Default | Production Value | Description |
+|:---|:---:|:---|:---|:---|
+| `ENVIRONMENT` | Yes | `development` | `production` | Deployment mode |
+| `APP_NAME` | No | `SahayakAI` | `SahayakAI` | Public application title |
+| `DEFAULT_AI_PROVIDER` | Yes | `demo` | `demo` | Provider mode (`demo`, `openai`, `gemini`) |
+| `DATABASE_URL` | Yes | `sqlite:///...` | `postgresql://...` | Managed PostgreSQL connection string |
+| `UPLOAD_DIR` | Yes | `./uploads` | `/var/data/uploads` | Persistent disk mount for file uploads |
+| `CORS_ORIGINS` | Yes | `localhost` | `https://sahayakai.vercel.app` | Whitelisted frontend origins (comma-separated) |
+| `MAX_UPLOAD_SIZE_MB` | No | `10` | `10` | Maximum file upload size limit (MB) |
+| `EMBEDDING_MODEL` | No | `all-MiniLM-L6-v2`| `all-MiniLM-L6-v2` | SentenceTransformer model identifier |
+| `RAG_SIMILARITY_THRESHOLD`| No | `0.35` | `0.35` | Minimum cosine similarity for RAG gating |
+| `RAG_TOP_K` | No | `5` | `5` | Number of chunks retrieved for context |
+| `OPENAI_API_KEY` | Optional | `None` | (Secure secret) | Only if `DEFAULT_AI_PROVIDER=openai` |
+| `GEMINI_API_KEY` | Optional | `None` | (Secure secret) | Only if `DEFAULT_AI_PROVIDER=gemini` |
+
+### 2.2 Frontend Environment Variables (Configured on Vercel)
+| Variable | Required | Production Value | Description |
+|:---|:---:|:---|:---|
+| `VITE_API_BASE_URL` | Yes | `https://sahayakai-backend.onrender.com/api` | Base URL pointing to deployed Render FastAPI service |
+
+> [!WARNING]
+> **Zero Secrets in Frontend**: `VITE_API_BASE_URL` is the **only** client-side variable. Never place `OPENAI_API_KEY`, `GEMINI_API_KEY`, or `DATABASE_URL` in Vercel environment variables.
+
+---
+
+## 3. Step-by-Step Deployment Instructions
+
+### Phase 1: Deploy Backend to Render
+1. **Create PostgreSQL Database on Render**:
+   - Navigate to Render Dashboard -> **New +** -> **PostgreSQL**.
+   - Name: `sahayakai-db`
+   - Database: `sahayakai`
+   - User: `sahayak_user`
+   - Plan: Free or Starter
+   - Copy the internal / external **Connection String** (`DATABASE_URL`).
+2. **Deploy Backend Web Service**:
+   - Option A: Connect repository and apply [`render.yaml`](../render.yaml) blueprint.
+   - Option B: Create **New Web Service**:
+     - Name: `sahayakai-backend`
+     - Runtime: `Python` (pinned to `3.12.2` via [`.python-version`](../.python-version))
+     - Build Command: `pip install --upgrade pip && pip install -r requirements.txt`
+     - Start Command: `uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT`
+     - Health Check Path: `/api/health`
+     - Disk: Add Persistent Disk mounted at `/var/data` (size: 1GB)
+     - Add Environment Variables:
+       - `ENVIRONMENT`: `production`
+       - `DEFAULT_AI_PROVIDER`: `demo`
+       - `DATABASE_URL`: paste PostgreSQL connection string
+       - `UPLOAD_DIR`: `/var/data/uploads`
+       - `CORS_ORIGINS`: `https://sahayakai.vercel.app,http://localhost:5173`
+3. **Verify Backend Health & Docs**:
+   - Access: `https://sahayakai-backend.onrender.com/api/health` (verify HTTP 200, status `ok`, database `ok`).
+   - Access: `https://sahayakai-backend.onrender.com/docs` (verify Swagger UI renders).
+
+### Phase 2: Deploy Frontend to Vercel
+1. **Import Repository in Vercel**:
+   - Go to [Vercel Dashboard](https://vercel.com) -> **Add New Project** -> Import repository.
+   - Set **Root Directory**: `frontend` (or leave root if monorepo configuration is selected).
+   - Framework Preset: **Vite**.
+   - Build Command: `npm run build` (`tsc && vite build`).
+   - Output Directory: `dist`.
+2. **Configure Environment Variables**:
+   - Add: `VITE_API_BASE_URL = https://sahayakai-backend.onrender.com/api`
+3. **SPA Routing**:
+   - The included [`vercel.json`](../frontend/vercel.json) rewrites all client-side paths (`/dashboard`, `/documents`, `/chat`, `/resumes`, `/career/profile`, `/career/roadmap`) to `/index.html`, ensuring clean page refreshes.
+4. **Deploy**:
+   - Click **Deploy**. Note the assigned production domain (e.g., `https://sahayakai.vercel.app`).
+5. **Update Backend CORS**:
+   - Update `CORS_ORIGINS` in Render settings to match the exact Vercel assigned domain.
+
+---
+
+## 4. Live Production Verification Suite
+
+Verify the entire production deployment by running [`scripts/verify_production.py`](../scripts/verify_production.py):
+
 ```bash
-ENVIRONMENT=production
-APP_NAME=SahayakAI
-DATABASE_URL=postgresql://sahayak_user:secure_password@postgres-db:5432/sahayak_prod
-DEFAULT_AI_PROVIDER=demo
-OPENAI_API_KEY=
-GEMINI_API_KEY=
-CORS_ORIGINS=https://sahayakai.example.com
-UPLOAD_DIR=/var/data/sahayakai/uploads
-MAX_UPLOAD_SIZE_BYTES=10485760
-EMBEDDING_MODEL_NAME=all-MiniLM-L6-v2
-SIMILARITY_THRESHOLD=0.35
+# Run against live production deployment:
+python scripts/verify_production.py --api-url https://sahayakai-backend.onrender.com/api
+
+# Or run local in-process simulation:
+python scripts/verify_production.py --local
 ```
 
-### 2.2 Frontend Environment Variables (`frontend/.env.production`)
-```bash
-VITE_API_BASE_URL=https://sahayakai.example.com/api
-```
+### Operational Gates Tested:
+1. `GET /api/health` -> HTTP 200 (database connected, provider ready)
+2. `GET /docs`, `/redoc`, `/openapi.json` -> HTTP 200
+3. CORS Preflight `OPTIONS /api/documents/upload` -> HTTP 200/204
+4. Document Ingestion -> text extraction, chunking, 384-dim dense embeddings
+5. Grounded RAG Query -> non-empty grounded answer with source citations
+6. Low-Relevance Gating -> `insufficient_evidence=True` without hallucination
+7. Multi-Turn Chat -> session creation, grounded answer synthesis
+8. Resume ATS Analyzer -> structured parsing, skill extraction, deterministic ATS match score
+9. Career Profile & Roadmap -> 12-week pedagogical roadmap across 6 bi-weekly phases
+10. Cross-User Isolation Attacks -> unauthorized operations blocked with HTTP 403 Forbidden
+11. Cascading Resource Deletion -> parent deletion unlinks child chunks/messages/files (404 verified)
+12. Secret Leakage Audit -> confirms zero credentials, keys, or filesystem paths leaked
 
 ---
 
-## 3. Production Build Instructions
+## 5. Rollback & Maintenance Procedures
 
-### 3.1 Build Frontend Bundle
-```bash
-cd frontend
-npm ci
-npm run build
-# Generates production artifacts in frontend/dist/
-```
+### Rollback Strategy
+- **Frontend**: In the Vercel dashboard, navigate to **Deployments**, locate the last healthy deployment, click the three dots, and select **Promote to Production** (instant zero-downtime rollback).
+- **Backend**: In Render, select the previous successful build and click **Rollback to this deploy**.
+- **Database**: Automatic daily snapshots are maintained by Render PostgreSQL. Schema migrations rely on additive `Base.metadata.create_all()` which does not alter or destroy existing table structures.
 
-### 3.2 Prepare Backend Environment
-```bash
-python -m venv .venv
-source .venv/bin/activate  # Or .venv\Scripts\activate on Windows
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-
----
-
-## 4. Reverse Proxy Configuration (Nginx)
-
-Example production Nginx virtual host configuration:
-
-```nginx
-server {
-    listen 80;
-    server_name sahayakai.example.com;
-    return 301 https://$host$request_uri;
-}
-
-server {
-    listen 443 ssl http2;
-    server_name sahayakai.example.com;
-
-    ssl_certificate /etc/letsencrypt/live/sahayakai.example.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/sahayakai.example.com/privkey.pem;
-
-    # Client body upload limit (10MB document uploads)
-    client_max_body_size 12M;
-
-    # Serve static frontend SPA
-    root /var/www/sahayakai/frontend/dist;
-    index index.html;
-
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # Proxy API traffic to FastAPI ASGI server
-    location /api/ {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_read_timeout 60s;
-        proxy_connect_timeout 10s;
-    }
-
-    # OpenAPI documentation endpoints
-    location ~ ^/(docs|redoc|openapi.json) {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-    }
-}
-```
-
----
-
-## 5. Process Supervision (Systemd)
-
-Example Systemd service unit for the FastAPI backend (`/etc/systemd/system/sahayakai.service`):
-
-```ini
-[Unit]
-Description=SahayakAI Backend Service
-After=network.target postgresql.service
-
-[Service]
-Type=simple
-User=sahayak
-WorkingDirectory=/var/www/sahayakai
-EnvironmentFile=/var/www/sahayakai/.env
-ExecStart=/var/www/sahayakai/.venv/bin/gunicorn backend.app.main:app \
-    --workers 4 \
-    --worker-class uvicorn.workers.UvicornWorker \
-    --bind 127.0.0.1:8000 \
-    --access-logfile /var/log/sahayakai/access.log \
-    --error-logfile /var/log/sahayakai/error.log
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-```
-
----
-
-## 6. Hardware & Resource Sizing
-
-* **CPU**: Minimum 2 vCPUs recommended for sentence-transformers embedding generation.
-* **RAM**: Minimum 2 GB RAM (SentenceTransformer `all-MiniLM-L6-v2` consumes ~300MB resident memory).
-* **Storage**: Fast SSD recommended for document uploads and SQLite / PostgreSQL data files.
-* **Network**: Low latency connection recommended if external AI providers (OpenAI / Gemini) are enabled.\n
+### Storage Persistence Note
+Render Persistent Disk provides single-instance filesystem durability. File uploads stored under `/var/data/uploads` persist across service restarts, deployments, and reboots.\n
