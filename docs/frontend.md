@@ -147,3 +147,23 @@ The complete end-to-end integration flow has been verified via `scripts/verify_s
 - **Integration Script**: `scripts/verify_step13.py` executed 9 verification steps successfully.
 - **Security Audit**: 0 hardcoded secrets or API keys in frontend source or production bundles.
 - **Mirror Parity**: 100% SHA-256 match between root `frontend/` and `SahayakAI/frontend/`.
+\n---
+
+## 4. Production Build & Deployment
+
+### 4.1 Production Bundle Optimization
+The frontend application compiles into an optimized static bundle using Vite 6:
+```bash
+cd frontend
+npm run build
+```
+
+**Build Output Metrics**:
+- `dist/index.html`: ~0.71 kB (gzip: 0.45 kB)
+- `dist/assets/index-*.css`: ~28.24 kB (gzip: 5.72 kB)
+- `dist/assets/index-*.js`: ~271.57 kB (gzip: 77.94 kB)
+
+### 4.2 Security Best Practices in Client Code
+- **Zero API Keys in Client Bundles**: The frontend interacts exclusively with the SahayakAI FastAPI backend; no external AI provider API keys (`OPENAI_API_KEY`, `GEMINI_API_KEY`) are bundled into client code.
+- **Header Scoping**: `X-User-Id` is attached per request from `localStorage` state.
+- **Sanitized Rendering**: React JSX prevents cross-site scripting (XSS) via automatic HTML escaping during DOM rendering.\n

@@ -286,3 +286,43 @@ Prior to launching frontend development in Step 12, the entire backend needed to
 - Guarantees an auditable, reproducible, production-grade API contract.
 - Prevents breaking changes and contract drift during frontend development.
 - Validates 236 green tests across all regression modules with 0 failures.
+\n---
+
+## ADR-15: Frontend ↔ Backend Integration & End-to-End Workflows
+
+### Context
+Step 12 implemented the React 18 + Vite frontend SPA with TypeScript and Tailwind CSS. Step 13 required wiring all frontend views to the FastAPI backend API, resolving CORS configurations, standardizing `X-User-Id` request injection, and verifying all five end-to-end user workflows against the live backend.
+
+### Decision
+1. **Centralized API Client**:
+   - Single `apiRequest` wrapper in `frontend/src/api/client.ts` automatically attaches `X-User-Id` from `UserContext`, sets `Accept` and `Content-Type: application/json` (except for `FormData`), and maps backend error envelopes to typed `ApiError` instances.
+2. **CORS Whitelist Alignment**:
+   - Backend `CORS_ORIGINS` defaults configured to include both `http://localhost:5173` and `http://127.0.0.1:5173`.
+3. **Comprehensive Flow Testing**:
+   - 19 Vitest tests covering API client, formatters, App routing, and component flows (Documents, Chat, Resume ATS, Career Profile, Roadmaps).
+4. **Live Verification Script**:
+   - `scripts/verify_step13.py` exercising all 9 integration steps against live backend.
+
+### Rationale
+Guarantees seamless user flows, prevents contract drift, and validates frontend-backend parity.
+
+---
+
+## ADR-16: Comprehensive Security Hardening, Strict Scoping, and Production Readiness
+
+### Context
+Prior to production deployment or release, AI-enabled applications must be audited for prompt injection vulnerabilities, tenant data leakage (IDOR), unsafe file uploads, secret exposure, database corruption, and unhandled exception safety.
+
+### Decision
+1. **Strict Cross-User Access Scoping**:
+   - Enforce mandatory tenant boundaries across all endpoints. Cross-user reads, updates, RAG asks, chat message injections, and deletions return `HTTP 403 Forbidden` with structured error codes.
+2. **Safe File Handling & Traversal Neutralization**:
+   - Validate extensions against whitelist (`.pdf`, `.txt`), enforce 10MB limits, sanitize filenames with UUID prefixes, and unlink disk files during cascade deletions.
+3. **Prompt Injection Containment**:
+   - Gate RAG retrieval behind cosine similarity thresholds (0.35) and structured prompt markers. Queries attempting prompt injection return controlled fallback messages without LLM key leakage.
+4. **Production Verification Suite**:
+   - Implement `scripts/verify_step14.py` covering 23 comprehensive security and resilience gates.
+   - Confirm 236/236 backend pytest tests, 19/19 frontend Vitest tests, and zero-error Vite production build (`npm run build`).
+
+### Rationale
+Ensures enterprise-grade security posture, eliminates data leakage risks, and validates platform production readiness.\n

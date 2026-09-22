@@ -1,8 +1,8 @@
 # SahayakAI — System Architecture Specification
 
 **Status:** ACTIVE  
-**Version:** 1.3.0  
-**Current Phase:** Completed STEP 11 (Backend Integration & API Contract Hardening)  
+**Version:** 1.4.0  
+**Current Phase:** Completed STEP 14 (Security Hardening, E2E Verification & Production Readiness)  
 **Verification Baseline:** 236 / 236 Tests Passing (100% Green) | Full Synthetic Journey Verified
 
 ---
@@ -122,3 +122,14 @@ All domain models strictly enforce ownership boundaries through the `X-User-Id` 
 - [Career Roadmap Specification](career_roadmap.md)
 - [Resume Analyzer Specification](resume_analyzer.md)
 - [Chat & Study Assistant Specification](chat_study_assistant.md)
+\n---
+
+## 6. Step 14 Security Hardening & Production Verification
+
+In Step 14, the entire application was hardened and verified across 23 comprehensive security and production readiness gates:
+
+1. **Multi-Tenant Cross-User Isolation**: All domain entities (`Document`, `ChatSession`, `Resume`, `CareerProfile`, `Roadmap`) are protected by ownership verification against `X-User-Id`. Cross-user access or deletion attempts strictly return `HTTP 403 Forbidden` (`DOCUMENT_ACCESS_DENIED`, etc.).
+2. **Prompt Injection Containment**: Hostile system prompt overrides and key leakage queries are trapped by cosine similarity thresholds (`SIMILARITY_THRESHOLD = 0.35`) and strict context gating, returning controlled fallback notices without leaking system secrets.
+3. **Safe File Upload & Path Traversal Prevention**: Uploads are restricted to `.pdf` and `.txt`, validated for size bounds, sanitized against path traversal (`..`, `/`), and stored under UUID-prefixed filenames.
+4. **Cascading Referential Integrity**: Cascade deletions reliably clean up dependent child records (chunks, messages, analyses, roadmaps) and unlink disk files, verified with `PRAGMA integrity_check;`.
+5. **Zero Key Exposure**: Sensitive API credentials and system tracebacks are strictly excluded from responses, logs, and public OpenAPI schemas.\n
