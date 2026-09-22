@@ -1,0 +1,111 @@
+# SahayakAI — Architecture Decision Records (ADRs)
+
+**Status:** APPROVED  
+**Baseline Date:** 2026-09-22  
+**Context:** Repository Scaffold & Architecture Freeze Verification
+
+---
+
+## ADR-01: SQLite as the Initial Database
+
+### Context
+SahayakAI requires a reliable, lightweight persistence store for user sessions, uploaded resume metadata, ATS evaluation results, and generated career roadmaps.
+
+### Decision
+Use **SQLite** via **SQLAlchemy 2.0 ORM** as the default initial database engine (`data/sahayak.db`).
+
+### Rationale
+1. **Zero-Configuration & Portability**: SQLite requires no separate background server process, external port configuration, or daemon setup. This makes developer onboarding and evaluation on local Windows machines instant and reliable.
+2. **ACID Compliance & Reliability**: SQLite provides full ACID transaction guarantees suitable for local single-user or small-team evaluation workflows.
+3. **Seamless Migration Path**: By leveraging SQLAlchemy 2.0 declarative models, the entire data layer remains decoupled from SQLite-specific dialects. Migrating to PostgreSQL or MySQL in production requires modifying only the `DATABASE_URL` connection string with zero changes to business logic or service code.
+4. **Self-Contained Artifact**: The database file is located in `data/sahayak.db` (git-ignored), facilitating easy backups, resets, and isolated test suites.
+
+---
+
+## ADR-02: Local Cosine-Similarity Vector Retrieval via NumPy
+
+### Context
+The RAG (Retrieval-Augmented Generation) knowledge engine requires semantic similarity search over pre-processed text chunks representing career paths, course guides, and domain FAQs.
+
+### Decision
+Implement vector retrieval initially using **NumPy matrix multiplication / cosine similarity** over in-memory L2-normalized dense embedding arrays rather than introducing a heavy vector database daemon (such as Milvus, Qdrant, or Pinecone).
+
+### Rationale
+1. **Simplicity and Zero External Dependencies**: Eliminates complex Docker setups, background services, and C++ binary compilation challenges on Windows.
+2. **Deterministic & Blazing Fast for Targeted Corpora**: For a curated career guidance corpus of 500 to 10,000 chunks, a vectorized NumPy dot product across 384-dimensional embeddings takes `< 15 milliseconds` on modern CPUs, outperforming network round-trip latencies of remote vector databases.
+3. **Full Auditability**: Distance calculations, score thresholds, and top-k filtering are directly inspectable in clean Python code without opaque black-box indexing.
+4. **Future-Proof Interface**: The RAG retrieval interface is encapsulated behind a `VectorStore` adapter, allowing drop-in upgrades to persistent vector databases (e.g., ChromaDB or pgvector) when corpora exceed 50,000 documents.
+
+---
+
+## ADR-03: Selection of `all-MiniLM-L6-v2` as the Embedding Model
+
+### Context
+Semantic search, resume-to-job matching, and RAG retrieval require dense vector representations of textual content.
+
+### Decision
+Adopt **`sentence-transformers/all-MiniLM-L6-v2`** as the default embedding model.
+
+### Rationale
+1. **Compact Model Footprint**: At only `~80MB` on disk, the model downloads quickly and fits comfortably in memory without requiring dedicated GPU hardware.
+2. **High CPU Throughput**: Generates embeddings in `< 20ms` per sentence on standard consumer CPUs, crucial for responsive Windows local execution.
+3. **Proven Benchmark Quality**: Evaluated on the Massive Text Embedding Benchmark (MTEB), `all-MiniLM-L6-v2` delivers state-of-the-art sentence semantic similarity relative to its diminutive parameter count.
+4. **Dimension Efficiency**: Produces `384`-dimensional embeddings, keeping in-memory NumPy matrix operations lean and memory consumption negligible.
+
+---
+
+## ADR-04: Pluggable Generative AI Provider Abstraction Layer
+
+### Context
+SahayakAI relies on generative language models for resume feedback generation, career advice synthesis, and conversational RAG responses. Relying on a single proprietary vendor creates vendor lock-in, testing friction, and runtime vulnerability.
+
+### Decision
+Establish an abstract base provider interface (**`BaseAIProvider`**) with concrete adapters for:
+* `DemoProvider` (deterministic local heuristics, zero keys)
+* `OpenAIProvider` (OpenAI API and OpenAI-compatible endpoints like Ollama, Groq, vLLM)
+* `GeminiProvider` (Google Gemini 1.5 Flash / Pro)
+
+### Rationale
+1. **Vendor Independence**: Allows developers and end-users to swap LLM backends simply by updating `DEFAULT_AI_PROVIDER` in `.env`.
+2. **Local Model & OpenAI Compatibility**: Organizations running self-hosted models (via Ollama, vLLM, or LMStudio) can utilize the OpenAI-compatible adapter without modifying backend code.
+3. **Resilience & Fallback**: If an external provider encounters rate limits, billing caps, or network outages, the system can gracefully fall back to alternative providers or Demo Mode.
+
+---
+
+## ADR-05: Mandatory Zero-Key Demo Mode
+
+### Context
+New contributors, evaluators, and automated test runners often lack active API keys for proprietary LLMs (e.g., OpenAI or Google Gemini). First-run crashes due to missing credentials create immediate friction.
+
+### Decision
+Make **Demo Mode** a first-class, default architectural requirement. The application must start and execute all core workflows without any API keys or internet connection.
+
+### Rationale
+1. **Immediate Out-of-the-Box Evaluation**: Evaluators can clone the repository, run `uvicorn backend.app.main:app`, and test resume analysis, roadmap generation, and RAG Q&A immediately.
+2. **Zero Financial Cost for Testing**: Unit, integration, and UI component tests execute against deterministic local logic without burning API credits.
+3. **Predictable CI/CD Pipelines**: Automated test harnesses pass consistently without flaky network timeouts or external rate limits.
+4. **User Transparency**: All responses generated under Demo Mode explicitly flag `"is_demo": true` in the API payload metadata.
+
+---
+
+## ADR-06: Phased Feature Development
+
+### Context
+Developing a complex AI application involving multi-modal parsers, NLP pipelines, vector stores, ORMs, and multi-provider LLMs simultaneously creates high risk of architectural drift, debugging ambiguity, and regression.
+
+### Decision
+Enforce a strict **9-Phase Sequential Implementation Workflow**:
+1. Phase 1: Repository Scaffold, Architecture Freeze & Base Configuration.
+2. Phase 2: Core Database Models (SQLAlchemy), Database Initialization & Pydantic Schemas.
+3. Phase 3: AI Provider Abstraction Layer & Deterministic Demo Mode Engine.
+4. Phase 4: Document Ingestion Service, NLP Text Processing & Resume Analyzer Engine.
+5. Phase 5: RAG Engine with NumPy Cosine Similarity & Knowledge Base Indexer.
+6. Phase 6: Dynamic Career Roadmap Generation Service.
+7. Phase 7: FastAPI REST Endpoints, Centralized Exception Handlers & Verification Tests.
+8. Phase 8: Frontend Single Page Application (React + Vite + Tailwind CSS).
+9. Phase 9: End-to-End System Integration, Verification & Documentation Wrap-up.
+
+### Rationale
+1. **Verifiable Milestones**: Each layer is built, type-checked, and unit-tested in isolation before higher-level modules depend on it.
+2. **Preservation of Architectural Integrity**: Prevents premature feature coupling (e.g., writing API routes before domain schemas are settled).
+3. **Traceable Debugging**: Isolates failures directly to the active phase rather than diagnosing sprawling cross-layer bugs.
