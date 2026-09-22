@@ -1,12 +1,13 @@
 """
 Database Foundation Module.
 Manages SQLAlchemy engine, session factory, base model class,
-session dependency, and connectivity verification.
+session dependency, database initialization, and connectivity verification.
 """
 
 from pathlib import Path
-from typing import Generator, Tuple
-from sqlalchemy import create_engine, text
+from typing import Generator, Optional, Tuple
+from sqlalchemy import create_engine, text, event
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
 from backend.app.config import get_settings
@@ -22,6 +23,19 @@ if settings.DATABASE_URL.startswith("sqlite"):
             db_path = Path(db_path_part)
             db_path.parent.mkdir(parents=True, exist_ok=True)
 
+
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    """Enable foreign key constraints for SQLite connections."""
+    cursor = dbapi_connection.cursor()
+    try:
+        cursor.execute("PRAGMA foreign_keys=ON")
+    except Exception:
+        pass
+    finally:
+        cursor.close()
+
+
 engine = create_engine(
     settings.DATABASE_URL,
     connect_args=connect_args,
@@ -35,6 +49,16 @@ SessionLocal = sessionmaker(
 )
 
 Base = declarative_base()
+
+
+def init_db(target_engine: Optional[Engine] = None) -> None:
+    """
+    Initialize all database tables defined in the metadata.
+    Idempotent: does not drop or recreate existing tables.
+    """
+    import backend.app.models  # noqa: F401
+    eng = target_engine or engine
+    Base.metadata.create_all(bind=eng)
 
 
 def get_db() -> Generator[Session, None, None]:

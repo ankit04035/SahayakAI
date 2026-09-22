@@ -9,6 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.config import get_settings
+from backend.app.database import init_db
 from backend.app.exceptions import register_exception_handlers
 from backend.app.logging_config import setup_logging
 from backend.app.routes.health import router as health_router
@@ -27,6 +28,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         settings.ENVIRONMENT,
     )
     logger.info("Configured AI Provider: %s", settings.AI_PROVIDER)
+    try:
+        init_db()
+        logger.info("Database schema initialized successfully.")
+    except Exception as exc:
+        logger.error("Database initialization encountered an error: %s", exc, exc_info=True)
+
     yield
     logger.info("Shutting down %s", settings.APP_NAME)
 

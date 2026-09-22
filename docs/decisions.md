@@ -109,3 +109,36 @@ Enforce a strict **9-Phase Sequential Implementation Workflow**:
 1. **Verifiable Milestones**: Each layer is built, type-checked, and unit-tested in isolation before higher-level modules depend on it.
 2. **Preservation of Architectural Integrity**: Prevents premature feature coupling (e.g., writing API routes before domain schemas are settled).
 3. **Traceable Debugging**: Isolates failures directly to the active phase rather than diagnosing sprawling cross-layer bugs.
+
+---
+
+## ADR-07: JSON Float List Storage for Document Chunk Vector Embeddings
+
+### Context
+SahayakAI requires persistent storage for text chunk vector embeddings generated during document ingestion for semantic search and RAG retrieval. Introducing an external vector database (such as Milvus, ChromaDB, or pgvector) at this stage introduces native C++ compilation dependencies, Docker requirements, and cross-platform installation friction on Windows.
+
+### Decision
+Store vector embeddings directly within the `document_chunks` table as a `JSON` column containing a serialized array of floating-point numbers (e.g. `[0.0123, -0.0456, ...]`). Semantic similarity search will deserialize these arrays and execute vectorized cosine similarity via NumPy matrix multiplication in memory.
+
+### Rationale
+1. **Zero External Infrastructure**: SQLite stores JSON natively without requiring additional database extensions, separate daemon processes, or cloud vector database accounts.
+2. **Deterministic Windows Compatibility**: Completely bypasses binary wheel compilation issues with native C++ vector libraries (e.g., hnswlib, chromadb) on Windows.
+3. **High Performance for Target Corpora**: For knowledge bases ranging up to 10,000 chunks, batch deserialization and NumPy in-memory dot product takes `< 15ms`, well within interactive RAG latency budgets.
+4. **Seamless Future Migration**: When corpora exceed in-memory scale, the database column can be easily migrated to `pgvector` (`vector(384)`) or indexed via external vector stores without changing chunk identification or metadata schemas.
+
+---
+
+## ADR-08: Explicit Cascading Deletion Hierarchy and Orphan Removal
+
+### Context
+The relational data model contains hierarchical dependencies: users own documents, resumes, chat sessions, and career profiles. In turn, documents own chunks, chat sessions own messages, resumes own analyses, and career profiles own roadmaps. Uncontrolled or implicit deletions risk orphaned records and foreign key constraint violations.
+
+### Decision
+Implement explicit cascading deletion (`cascade="all, delete-orphan"`, `passive_deletes=True`) on all parent-to-child entity relationships, paired with database-level `ON DELETE CASCADE` foreign key clauses, and enforce SQLite foreign key integrity via `PRAGMA foreign_keys=ON` on every database connection. For the loose reference between `ChatSession` and `Document`, apply `ON DELETE SET NULL`.
+
+### Rationale
+1. **Data Integrity**: Deleting a user cleanly purges all associated documents, vectorized chunks, chat history, resumes, evaluations, and career roadmaps without leaving orphaned records in the database.
+2. **Dual-Layer Enforcement**: Both the SQLAlchemy ORM session lifecycle and the underlying relational database enforce referential integrity.
+3. **Preservation of Conversational Context**: If an uploaded reference document is deleted, associated chat sessions are not destroyed; instead, `ChatSession.document_id` is safely set to `NULL`, preserving conversational history while reflecting the document's removal.
+4. **SQLite Parity with Production RDBMS**: Explicitly enabling foreign key enforcement via SQLite PRAGMA guarantees that development behavior matches production PostgreSQL constraints identically.
+
