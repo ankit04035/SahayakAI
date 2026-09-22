@@ -66,9 +66,13 @@ SahayakAI/uploads/*
 *.sqlite3
 data/*
 !data/.gitkeep
+!data/samples/
+!data/samples/**
 data/vector_db/
 SahayakAI/data/*
 !SahayakAI/data/.gitkeep
+!SahayakAI/data/samples/
+!SahayakAI/data/samples/**
 SahayakAI/data/vector_db/
 
 # --- Generated Model Caches, Weights & Artifacts ---

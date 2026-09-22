@@ -1,0 +1,15 @@
+SahayakAI Academic Knowledge Base: Fundamentals of Machine Learning
+
+Chapter 1: Introduction to Artificial Intelligence and Machine Learning
+Machine Learning (ML) is a branch of artificial intelligence (AI) and computer science that focuses on using data and algorithms to enable AI to imitate the way that humans learn, gradually improving its accuracy.
+
+मशीन लर्निंग (Machine Learning) कृत्रिम बुद्धिमत्ता की वह शाखा है जो कंप्यूटर को बिना स्पष्ट रूप से प्रोग्राम किए डेटा से सीखने की क्षमता प्रदान करती है। इस तकनीक की सहायता से प्रणाली पुराने अनुभवों के आधार पर सटीक निर्णय ले सकती है।
+
+In modern software engineering, supervised learning algorithms analyze labeled training datasets to produce an inferred function. Common supervised tasks include classification and regression analysis. Algorithms such as Support Vector Machines, Decision Trees, and Gradient Boosting form the core foundational toolkit for predictive modeling.
+
+Unsupervised learning algorithms discover hidden patterns or data groupings without human intervention. Clustering methods such as K-Means, Hierarchical Clustering, and Principal Component Analysis (PCA) enable dimensionality reduction and exploratory feature discovery.
+
+Chapter 2: Model Training and Evaluation Metrics
+Model validation requires rigorous cross-validation strategies to prevent overfitting. Popular evaluation metrics include Precision, Recall, F1-Score, and Receiver Operating Characteristic curves (ROC-AUC). When dealing with imbalanced datasets, accuracy alone can be misleading; precision and recall provide balanced performance indicators.
+
+Yeh padhai exam preparation ke liye bahut zaroori hai. Machine learning concepts ko samajhne ke liye practical hands-on implementation zaroori hota hai.

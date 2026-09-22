@@ -57,6 +57,8 @@ frontend/out/
 # --- Uploads & Temporary Stored User Files ---
 uploads/*
 !uploads/.gitkeep
+SahayakAI/uploads/*
+!SahayakAI/uploads/.gitkeep
 
 # --- Local Databases & Data Stores ---
 *.db
@@ -64,11 +66,20 @@ uploads/*
 *.sqlite3
 data/*
 !data/.gitkeep
+!data/samples/
+!data/samples/**
 data/vector_db/
+SahayakAI/data/*
+!SahayakAI/data/.gitkeep
+!SahayakAI/data/samples/
+!SahayakAI/data/samples/**
+SahayakAI/data/vector_db/
 
 # --- Generated Model Caches, Weights & Artifacts ---
 models/*
 !models/.gitkeep
+SahayakAI/models/*
+!SahayakAI/models/.gitkeep
 .cache/
 huggingface/
 torch/

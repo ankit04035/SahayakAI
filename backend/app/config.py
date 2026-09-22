@@ -80,6 +80,24 @@ class Settings(BaseSettings):
         le=100,
         description="Maximum file upload size in megabytes",
     )
+    UPLOAD_DIR: str = Field(
+        default="./uploads",
+        description="Base directory for uploaded documents and files",
+    )
+
+    # Document Chunking settings
+    CHUNK_SIZE: int = Field(
+        default=500,
+        gt=50,
+        le=10000,
+        description="Target character chunk size for document splitting",
+    )
+    CHUNK_OVERLAP: int = Field(
+        default=50,
+        ge=0,
+        le=2000,
+        description="Overlap in characters between consecutive chunks",
+    )
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod

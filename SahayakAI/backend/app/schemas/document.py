@@ -48,6 +48,40 @@ class DocumentRead(DocumentBase, TimestampSchema):
     model_config = ConfigDict(from_attributes=True)
 
 
+class DocumentDetailRead(DocumentRead):
+    """Detailed document response with chunk count and statistics."""
+
+    chunk_count: int = 0
+    character_count: int = 0
+    word_count: int = 0
+    page_count: int = 1
+    primary_language: str = "unknown"
+    keywords: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class DocumentUploadResponse(BaseModel):
+    """Structured response returned immediately upon successful document upload and processing."""
+
+    id: int
+    user_id: int
+    title: Optional[str] = None
+    original_filename: str
+    stored_filename: str
+    file_type: str
+    file_size: int
+    mime_type: Optional[str] = None
+    processing_status: str
+    character_count: int = Field(default=0, ge=0)
+    word_count: int = Field(default=0, ge=0)
+    page_count: int = Field(default=1, ge=1)
+    chunk_count: int = Field(default=0, ge=0)
+    primary_language: str = "unknown"
+    keywords: List[Dict[str, Any]] = Field(default_factory=list)
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class DocumentChunkBase(BaseModel):
     """Base chunk schema."""
 

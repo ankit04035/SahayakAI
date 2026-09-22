@@ -20,6 +20,10 @@ google-genai>=2.0.0,<3.0.0
 
 # --- HTTP Client & Utilities ---
 httpx>=0.27.0,<1.0.0
+python-multipart>=0.0.9,<1.0.0
+
+# --- Document Processing (Step 5) ---
+PyMuPDF>=1.24.0,<2.0.0
 
 # --- Testing Framework ---
 pytest>=8.0.0
