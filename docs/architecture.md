@@ -1,8 +1,8 @@
 # SahayakAI — System Architecture Specification
 
 **Status:** ACTIVE  
-**Version:** 1.1.0  
-**Current Phase:** Completed STEP 5 (Document Processing & Core NLP Pipeline)
+**Version:** 1.2.0  
+**Current Phase:** Completed STEP 6 (Transformer / Sentence-Embedding Layer)
 
 ---
 
@@ -16,9 +16,10 @@ The platform is designed following strict layered architecture principles:
 3. **Domain & Business Logic Layer**:
    - Ingestion & Extraction Services (`backend/app/services/document_service.py` via PyMuPDF and UTF-8 multi-encoding decoding).
    - Core NLP Engine (`backend/app/nlp/` — deterministic text cleaner, reading statistics, script-based language identification, multilingual keyword extraction, query preprocessor, boundary-aware sliding window chunker).
-   - Local RAG Retrieval Engine (Future STEP 6 — NumPy matrix operations, 384-dim embeddings).
-   - Resume ATS Skill Gap Analyzer (Future STEP 7).
-   - Dynamic Career Roadmap Synthesizer (Future STEP 8).
+   - Embedding & Transformer Engine (`backend/app/rag/` — `all-MiniLM-L6-v2` 384-dimensional sentence-transformers, L2 normalization, in-process model caching, batch encoding, JSON vector persistence).
+   - Local RAG Retrieval Engine (Future STEP 7 — NumPy matrix operations, cosine similarity search).
+   - Resume ATS Skill Gap Analyzer (Future STEP 8).
+   - Dynamic Career Roadmap Synthesizer (Future STEP 9).
 4. **AI Provider Abstraction Layer**: Generic `BaseAIProvider` decoupling domain logic from concrete LLMs (`DemoProvider`, `OpenAICompatibleProvider`, `GeminiProvider`).
 5. **Persistence Layer**: SQLAlchemy 2.0 ORM with SQLite default storage (`data/sahayakai.db`) and strict referential integrity (`PRAGMA foreign_keys=ON`).
 
@@ -75,6 +76,8 @@ graph TD
 
 ## 3. Subsystem References
 
+- **Sentence-Embedding Pipeline**: Complete specification in [`docs/embedding_pipeline.md`](embedding_pipeline.md).
+- **RAG Architecture**: RAG retrieval roadmap in [`docs/rag.md`](rag.md).
 - **Document Processing**: Complete specification in [`docs/document_processing.md`](document_processing.md).
 - **Core NLP Pipeline**: Detailed algorithms and models in [`docs/nlp_pipeline.md`](nlp_pipeline.md).
 - **Database Models & Schemas**: Detailed in [`docs/database.md`](database.md).

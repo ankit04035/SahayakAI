@@ -6,12 +6,14 @@ SahayakAI is an intelligent career guidance and productivity assistant built to 
 
 ## Current Project Status
 
-**Current Phase:** Phase 4 — AI Provider Abstraction Layer & Deterministic Demo Mode  
+**Current Phase:** Phase 6 — Transformer / Sentence-Embedding Layer (`all-MiniLM-L6-v2`)  
 The repository has established:
 1. Architecture Freeze baseline specifications ([`docs/architecture_freeze.md`](docs/architecture_freeze.md)).
 2. Complete FastAPI backend foundation with centralized error handling and health checks.
 3. Complete SQLAlchemy 2.0 ORM persistence layer with 9 models, UTC timestamps, and cascading delete rules ([`docs/database.md`](docs/database.md)).
 4. Pluggable, vendor-neutral GenAI Provider Abstraction Layer supporting zero-key deterministic Demo Mode, OpenAI-compatible endpoints, and Google Gemini with defensive secret sanitization ([`docs/genai_providers.md`](docs/genai_providers.md)).
+5. Real document processing and core NLP pipeline supporting PDF and TXT uploads, safe sanitization, tokenization, keyword extraction, and chunk persistence ([`docs/document_processing.md`](docs/document_processing.md)).
+6. Sentence-Transformer embedding layer using `all-MiniLM-L6-v2` (384 dimensions), supporting offline caching, batch chunk embeddings, and zero-pickle vector persistence ([`docs/embedding_pipeline.md`](docs/embedding_pipeline.md), [`docs/rag.md`](docs/rag.md)).
 
 ---
 
@@ -129,13 +131,19 @@ cp .env.example .env
 
 *Note: By default, `AI_PROVIDER=demo` is configured, allowing the entire application and test suite to run without any external API keys or cloud accounts.*
 
-### 5. Run the Server
+### 5. Download / Cache Embedding Model (Optional Pre-load)
+```bash
+python scripts/download_embedding_model.py
+```
+*(Pre-loads and validates `all-MiniLM-L6-v2` into local Hugging Face cache so runtime inference runs completely offline).*
+
+### 6. Run the Server
 ```bash
 python -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 Verify health status at `http://127.0.0.1:8000/api/health`.
 
-### 6. Run Automated Tests
+### 7. Run Automated Tests
 ```bash
 python -m pytest -v
 ```

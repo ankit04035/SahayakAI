@@ -99,6 +99,36 @@ class Settings(BaseSettings):
         description="Overlap in characters between consecutive chunks",
     )
 
+    # Embedding & Transformer settings (Step 6)
+    EMBEDDING_MODEL: str = Field(
+        default="all-MiniLM-L6-v2",
+        description="SentenceTransformer model name for text embeddings",
+    )
+    EMBEDDING_DIMENSION: int = Field(
+        default=384,
+        gt=0,
+        le=4096,
+        description="Expected embedding dimensionality for the configured model",
+    )
+    EMBEDDING_DEVICE: str = Field(
+        default="cpu",
+        description="Device for embedding inference (cpu or cuda)",
+    )
+    EMBEDDING_BATCH_SIZE: int = Field(
+        default=32,
+        gt=0,
+        le=512,
+        description="Batch size for generating embeddings",
+    )
+    EMBEDDING_NORMALIZE: bool = Field(
+        default=True,
+        description="Whether to L2-normalize embeddings for cosine similarity retrieval",
+    )
+    EMBEDDING_CACHE_DIR: Union[str, None] = Field(
+        default=None,
+        description="Optional local directory for caching transformer model weights",
+    )
+
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
