@@ -222,3 +222,29 @@ Implement a two-stage deterministic Resume Analyzer:
 2. **Zero-Token Cost & Offline Capability**: Runs 100% locally on CPU without requiring external API keys or cloud services.
 3. **High Throughput**: Extraction and scoring execute in `< 50ms` per document.
 4. **Security & Privacy**: Resumes are protected by strict per-user ownership boundaries.
+
+---
+
+## ADR-13: Career Profile & Personalized Career Roadmap Architecture
+
+### Context
+Guiding candidates from diverse academic and professional backgrounds toward target technology roles requires structured profile tracking and transparent learning roadmaps. Relying exclusively on non-deterministic LLMs for career advice risks ungrounded skill sequencing, hallucinated competencies, inconsistent advice across turns, and high inference costs.
+
+### Decision
+Implement a hybrid two-tier Career Roadmap engine:
+1. **Curated Domain Taxonomy & Deterministic Skill Gaps**:
+   - Establish an isolated role taxonomy (`ROLE_TAXONOMY`) covering 10 core disciplines.
+   - Deterministically compute missing vs. possessed skills using canonical normalization (`normalize_skill`).
+   - Sequence skills into a pedagogical 12-week progression plan with structured projects and interview topics.
+2. **Resume Analyzer Integration**:
+   - Allow roadmaps to consume verified skills extracted from candidate resumes (Step 9).
+3. **Pluggable AI Enrichment**:
+   - Leverage `BaseAIProvider` to synthesize natural-language contextual advisory notes while keeping core roadmap data deterministic.
+   - Run 100% locally and deterministically under `AI_PROVIDER=demo` without API keys.
+4. **Idempotent Persistence & Multi-Tenant Security**:
+   - Enforce user-scoping on `CareerProfile` and `Roadmap` models. Cross-user operations return HTTP 403 Forbidden.
+
+### Rationale
+1. **Explainable & Auditable**: Every recommendation directly cites verified competencies and missing requirements.
+2. **Zero-Token Offline Capability**: Completely functional in offline demo mode.
+3. **Reproducible**: Given identical profile inputs, skill gaps and milestones remain constant.

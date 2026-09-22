@@ -6,7 +6,7 @@ SahayakAI is an intelligent career guidance and productivity assistant built to 
 
 ## Current Project Status
 
-**Current Phase:** Phase 9 — Resume Analyzer & ATS Scorecard  
+**Current Phase:** Phase 10 — Career Profile & Personalized Career Roadmap  
 The repository has established:
 1. Architecture Freeze baseline specifications ([`docs/architecture_freeze.md`](docs/architecture_freeze.md)).
 2. Complete FastAPI backend foundation with centralized error handling and health checks.
@@ -17,6 +17,7 @@ The repository has established:
 7. Grounded Vector Retrieval and RAG Pipeline with cosine similarity, similarity threshold gating, deduplication, character budget protection, prompt injection guardrails, and deterministic Demo Mode citations ([`docs/rag.md`](docs/rag.md), [`docs/api.md`](docs/api.md)).
 8. Study Assistant & Document-Grounded Chat with multi-turn bounded history, document grounding, citation tracking, and general study mentoring ([`docs/chat.md`](docs/chat.md), [`docs/api.md`](docs/api.md)).
 9. Resume Analyzer & ATS Scorecard with deterministic section extraction, alias-resilient skill normalization, transparent match scoring formula, traceable recommendations, and cascade persistence ([`docs/resume_analyzer.md`](docs/resume_analyzer.md), [`docs/api.md`](docs/api.md)). (200 automated tests passing).
+10. Career Profile & Personalized Career Roadmap with curated role taxonomy, deterministic skill gaps, 12-week progression plans, resume integration, and AI advisory reasoning ([`docs/career_roadmap.md`](docs/career_roadmap.md), [`docs/api.md`](docs/api.md)).
 
 ---
 

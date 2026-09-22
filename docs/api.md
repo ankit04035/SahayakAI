@@ -297,3 +297,56 @@ Retrieves historical analysis records for a resume.
 
 ### `GET /api/resumes/{resume_id}/analyses/{analysis_id}`
 Retrieves a specific analysis scorecard by ID. Enforces ownership check.
+
+---
+
+## 6. Career Profile & Personalized Career Roadmap Endpoints
+
+### `POST /api/career/profile`
+Creates or idempotently updates the career profile for the requesting user.
+- **Request Body (`application/json`):**
+```json
+{
+  "degree": "B.Tech in Computer Science",
+  "current_skills": ["Python", "FastAPI", "Git"],
+  "experience": "1 year building backend REST APIs",
+  "interests": ["Distributed Systems", "Cloud Computing"],
+  "target_role": "Backend Developer"
+}
+```
+- **Response (201 Created):** Full `CareerProfileRead` object.
+
+### `GET /api/career/profile`
+Retrieves the active career profile of the requesting user.
+- **Headers:** `X-User-Id` (optional)
+- **Response (200 OK / 404 Not Found):** `CareerProfileRead` object.
+
+### `PUT /api/career/profile`
+Updates specific fields of the career profile.
+- **Request Body (`application/json`):** Partial profile update payload.
+- **Response (200 OK):** Updated `CareerProfileRead`.
+
+### `DELETE /api/career/profile`
+Deletes the user's career profile and cascades deletion to all linked roadmaps.
+- **Response (200 OK):** `{"message": "Career profile deleted successfully"}`
+
+### `POST /api/career/roadmaps/generate`
+Generates a structured, 12-week career roadmap based on the user's profile and optional resume data.
+- **Request Body (`application/json`, optional):**
+```json
+{
+  "target_role": "Backend Developer",
+  "resume_id": 1
+}
+```
+- **Response (201 Created):** Full `RoadmapRead` object containing `title`, `recommended_skills`, `missing_skills`, `projects`, `learning_order`, `weekly_plan`, `interview_topics`, and `recommendation_reasons`.
+
+### `GET /api/career/roadmaps`
+Lists all roadmaps generated for the requesting user's profile.
+- **Response (200 OK):** Array of `RoadmapRead` objects.
+
+### `GET /api/career/roadmaps/{roadmap_id}`
+Retrieves a specific career roadmap by ID with user ownership validation (403 if unauthorized).
+
+### `DELETE /api/career/roadmaps/{roadmap_id}`
+Deletes a specific career roadmap with ownership enforcement.

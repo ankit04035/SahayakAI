@@ -2,7 +2,7 @@
 
 **Status:** ACTIVE  
 **Version:** 1.2.0  
-**Current Phase:** Completed STEP 9 (Resume Analyzer & ATS Scorecard)
+**Current Phase:** Completed STEP 10 (Career Profile & Personalized Career Roadmap)
 
 ---
 
@@ -20,7 +20,7 @@ The platform is designed following strict layered architecture principles:
    - Local RAG Retrieval Engine (STEP 7 Completed — NumPy dot product, cosine similarity search, threshold gating).
    - Study Assistant & Grounded Chat Service (STEP 8 Completed — multi-turn dialogue, bounded history, citation tracking).
    - Resume ATS Skill Gap Analyzer (STEP 9 Completed — structured parsing, taxonomy normalization, transparent scoring).
-   - Dynamic Career Roadmap Synthesizer (Future STEP 9).
+   - Dynamic Career Roadmap Synthesizer (STEP 10 Completed — deterministic taxonomy, skill gaps, milestone planning).
 4. **AI Provider Abstraction Layer**: Generic `BaseAIProvider` decoupling domain logic from concrete LLMs (`DemoProvider`, `OpenAICompatibleProvider`, `GeminiProvider`).
 5. **Persistence Layer**: SQLAlchemy 2.0 ORM with SQLite default storage (`data/sahayakai.db`) and strict referential integrity (`PRAGMA foreign_keys=ON`).
 
@@ -87,3 +87,5 @@ graph TD
 - **Architecture Freeze Baseline**: Verified in [`docs/architecture_freeze.md`](architecture_freeze.md).
 
 - **Resume Analyzer**: Detailed architecture and ATS scoring formulas in [`docs/resume_analyzer.md`](resume_analyzer.md).
+
+- **Career Roadmap**: Complete specification and role taxonomy in [`docs/career_roadmap.md`](career_roadmap.md).

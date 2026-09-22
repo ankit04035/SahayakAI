@@ -31,6 +31,10 @@ from backend.app.nlp.resume_parser import (
     parse_resume_sections,
     parse_structured_resume,
 )
+from backend.app.nlp.role_taxonomy import (
+    ROLE_TAXONOMY,
+    get_role_taxonomy,
+)
 
 __all__ = [
     "clean_text",
@@ -50,4 +54,6 @@ __all__ = [
     "extract_experience",
     "parse_resume_sections",
     "parse_structured_resume",
+    "ROLE_TAXONOMY",
+    "get_role_taxonomy",
 ]
