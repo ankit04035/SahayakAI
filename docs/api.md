@@ -1,352 +1,66 @@
-# SahayakAI — REST API Reference
+# SahayakAI — REST API Reference (Step 11 Freeze)
 
 **Base URL:** `http://127.0.0.1:8000/api`  
 **Interactive Docs:** `http://127.0.0.1:8000/docs` (OpenAPI Swagger UI)  
+**ReDoc:** `http://127.0.0.1:8000/redoc`  
+**OpenAPI Specification:** `http://127.0.0.1:8000/openapi.json`  
+**Frontend Contract:** See [`docs/frontend_contract.md`](frontend_contract.md)
 
 ---
 
-## 1. System & Health Endpoints
-
-### `GET /api/health`
-Returns system status, active environment, and version information.
-
-**Response (200 OK):**
-```json
-{
-  "status": "healthy",
-  "app_name": "SahayakAI",
-  "environment": "development",
-  "version": "0.1.0"
-}
-```
+## Global Request Headers
+- `Content-Type`: `application/json` (or `multipart/form-data` for file uploads)
+- `X-User-Id`: Optional integer header for scoping resource access to a specific user (HTTP 403 on cross-user access).
 
 ---
 
-## 2. Document Ingestion Endpoints
+## Endpoint Summary (33 Total Endpoints)
 
-### `POST /api/documents/upload`
-Uploads a document (PDF or TXT) with automatic text cleaning, chunking, and optional embedding generation.
+### 1. Health & Status
+| Method | Path | Status | Description |
+|---|---|---|---|
+| `GET` | `/api/health` | 200 / 503 | System liveness, database status, AI provider mode, version |
 
-- **Content-Type:** `multipart/form-data`
-- **Parameters:**
-  - `file`: File upload (`.txt` or `.pdf`, max 10MB)
-  - `auto_embed`: Boolean form field (default: `true`). If true, automatically generates and persists 384-dim embeddings.
+### 2. Document Management & RAG Grounding
+| Method | Path | Status | Description |
+|---|---|---|---|
+| `POST` | `/api/documents/upload` | 201 | Upload & chunk PDF/TXT reference document |
+| `GET` | `/api/documents` | 200 | List uploaded reference documents |
+| `GET` | `/api/documents/{id}` | 200 | Get document metadata and statistics |
+| `DELETE` | `/api/documents/{id}` | 200 | Delete document and cascade chunks / disk file |
+| `GET` | `/api/documents/{id}/chunks` | 200 | List paginated text chunks for a document |
+| `POST` | `/api/documents/{id}/embed` | 200 | Compute 384-dim embeddings for all chunks |
+| `POST` | `/api/documents/{id}/ask` | 200 | Ask question grounded in document (direct RAG) |
 
-**Response (201 Created):**
-```json
-{
-  "id": 1,
-  "original_filename": "os_concepts.txt",
-  "file_type": "txt",
-  "file_size": 2048,
-  "processing_status": "completed",
-  "chunk_count": 4,
-  "created_at": "2026-09-22T14:30:00Z"
-}
-```
+### 3. Study Assistant & Conversational Chat
+| Method | Path | Status | Description |
+|---|---|---|---|
+| `POST` | `/api/chat/sessions` | 201 | Create chat session (optionally document-grounded) |
+| `GET` | `/api/chat/sessions` | 200 | List chat sessions for requesting user |
+| `GET` | `/api/chat/sessions/{id}` | 200 | Get details for specific chat session |
+| `DELETE` | `/api/chat/sessions/{id}` | 200 | Delete chat session and cascade messages |
+| `POST` | `/api/chat/sessions/{id}/messages` | 200 | Send message and receive grounded AI response |
+| `GET` | `/api/chat/sessions/{id}/messages` | 200 | List chronological conversation message history |
 
-### `GET /api/documents`
-Lists all uploaded documents.
+### 4. Resume Analyzer & ATS Evaluation
+| Method | Path | Status | Description |
+|---|---|---|---|
+| `POST` | `/api/resumes` | 201 | Upload candidate resume (.pdf or .txt) |
+| `GET` | `/api/resumes` | 200 | List candidate resumes |
+| `GET` | `/api/resumes/{id}` | 200 | Get resume metadata and storage status |
+| `DELETE` | `/api/resumes/{id}` | 200 | Delete resume, linked analyses, and disk file |
+| `POST` | `/api/resumes/{id}/analyze` | 200 | Run ATS evaluation against target job description |
+| `GET` | `/api/resumes/{id}/analyses` | 200 | List historical ATS evaluations for resume |
+| `GET` | `/api/resumes/{id}/analyses/{analysis_id}` | 200 | Get specific ATS evaluation details |
 
-### `GET /api/documents/{document_id}`
-Returns metadata and status for a specific document.
-
-### `GET /api/documents/{document_id}/chunks`
-Lists all text chunks extracted from a specific document.
-
-### `DELETE /api/documents/{document_id}`
-Deletes a document and cascades deletion to all associated chunks and embeddings.
-
----
-
-## 3. RAG & Vector Retrieval Endpoints
-
-### `POST /api/documents/{document_id}/ask`
-Performs grounded Question & Answering against the specified document using vector similarity search and LLM synthesis.
-
-- **Request Body (`application/json`):**
-```json
-{
-  "question": "What causes thrashing and how does it affect computer performance?",
-  "top_k": 5,
-  "similarity_threshold": 0.35
-}
-```
-
-- **Response (200 OK — Grounded Answer):**
-```json
-{
-  "answer": "Thrashing occurs when a computer virtual memory subsystem is in a constant state of paging...",
-  "grounded": true,
-  "provider": "demo",
-  "model": "demo-deterministic",
-  "sources": [
-    {
-      "chunk_id": 14,
-      "chunk_index": 2,
-      "page": 1,
-      "similarity": 0.6195
-    }
-  ],
-  "query": "What causes thrashing and how does it affect computer performance?",
-  "retrieved_count": 1,
-  "insufficient_evidence": false
-}
-```
-
-- **Response (200 OK — Insufficient Evidence):**
-```json
-{
-  "answer": "The provided document does not contain sufficient relevant information to answer this question.",
-  "grounded": false,
-  "provider": "demo",
-  "model": "demo-deterministic",
-  "sources": [],
-  "query": "What is the recipe for baking chocolate cookies?",
-  "retrieved_count": 0,
-  "insufficient_evidence": true
-}
-```
-
-- **Error Responses:**
-  - `400 Bad Request`: Document has not been processed or contains no text chunks.
-  - `404 Not Found`: Document ID does not exist.
-  - `422 Unprocessable Entity`: Document chunks have not been embedded yet, or query validation failed.
-
-### `POST /api/documents/{document_id}/embed`
-Triggers or re-runs embedding generation across all chunks of an uploaded document using `all-MiniLM-L6-v2`.
-
-- **Response (200 OK):**
-```json
-{
-  "document_id": 1,
-  "embedded_chunks": 4,
-  "status": "completed"
-}
-```
-
----
-
-## 4. Chat & Study Assistant Endpoints
-
-### `POST /api/chat/sessions`
-Creates a new conversational chat session.
-
-- **Request Body (`application/json`):**
-```json
-{
-  "title": "Operating Systems Revision",
-  "document_id": 1,
-  "user_id": null
-}
-```
-- **Response (201 Created):**
-```json
-{
-  "id": 1,
-  "user_id": 1,
-  "title": "Operating Systems Revision",
-  "document_id": 1,
-  "created_at": "2026-09-22T16:00:00Z",
-  "updated_at": "2026-09-22T16:00:00Z"
-}
-```
-
-### `GET /api/chat/sessions`
-Lists chat sessions belonging to the user.
-- **Query Parameters:** `document_id` (optional), `user_id` (optional)
-- **Headers:** `X-User-Id` (optional)
-
-### `GET /api/chat/sessions/{session_id}`
-Retrieves session metadata. Enforces user ownership (403 if unauthorized).
-
-### `DELETE /api/chat/sessions/{session_id}`
-Deletes a chat session and cascades deletion to all messages.
-
-### `POST /api/chat/sessions/{session_id}/messages`
-Submits a user question to the study assistant.
-- **Request Body (`application/json`):**
-```json
-{
-  "message": "What is thrashing and how does the OS mitigate it?",
-  "top_k": 3,
-  "similarity_threshold": 0.35
-}
-```
-- **Response (200 OK — Grounded Document Answer):**
-```json
-{
-  "session_id": 1,
-  "user_message": {
-    "id": 10,
-    "session_id": 1,
-    "role": "user",
-    "content": "What is thrashing and how does the OS mitigate it?",
-    "created_at": "2026-09-22T16:05:00Z"
-  },
-  "assistant_message": {
-    "id": 11,
-    "session_id": 1,
-    "role": "assistant",
-    "content": "Thrashing occurs when a computer's virtual memory subsystem...",
-    "source_metadata": {
-      "grounded": true,
-      "insufficient_evidence": false,
-      "sources": [{"chunk_id": 4, "chunk_index": 2, "page": 1, "similarity": 0.6195}]
-    },
-    "created_at": "2026-09-22T16:05:01Z"
-  },
-  "grounded": true,
-  "insufficient_evidence": false,
-  "sources": [
-    {
-      "chunk_id": 4,
-      "chunk_index": 2,
-      "page": 1,
-      "similarity": 0.6195
-    }
-  ],
-  "provider": "demo",
-  "model": "demo-deterministic"
-}
-```
-
-### `GET /api/chat/sessions/{session_id}/messages`
-Retrieves chronological message history for a session.
-
----
-
-## 5. Resume Analyzer & ATS Scorecard Endpoints
-
-### `POST /api/resumes`
-Uploads a candidate resume (`.pdf` or `.txt`) with size validation (up to 10MB), path traversal sanitization, and secure disk persistence.
-- **Content-Type:** `multipart/form-data`
-- **Form Fields:** `file` (required), `user_id` (optional)
-- **Headers:** `X-User-Id` (optional)
-- **Response (201 Created):**
-```json
-{
-  "id": 1,
-  "user_id": 1,
-  "original_filename": "ananya_resume.txt",
-  "stored_filename": "a1b2c3d4_ananya_resume.txt",
-  "file_type": ".txt",
-  "file_size": 2048,
-  "processing_status": "completed",
-  "created_at": "2026-09-22T16:20:00Z",
-  "updated_at": "2026-09-22T16:20:00Z"
-}
-```
-
-### `GET /api/resumes`
-Lists all resumes belonging to the requesting user.
-- **Headers:** `X-User-Id` (optional)
-- **Response (200 OK):** Array of resume records.
-
-### `GET /api/resumes/{resume_id}`
-Retrieves metadata for a specific resume. Enforces user ownership (403 if unauthorized).
-
-### `DELETE /api/resumes/{resume_id}`
-Deletes a resume, removes the stored file from disk, and cascades deletion to all associated analysis records.
-
-### `POST /api/resumes/{resume_id}/analyze`
-Extracts structured skills, education, and experience, and evaluates against an optional job description.
-- **Request Body (`application/json`, optional):**
-```json
-{
-  "job_description": "Seeking a Backend Engineer proficient in Python, FastAPI, Docker, Kubernetes, and AWS."
-}
-```
-- **Response (200 OK — With Job Description):**
-```json
-{
-  "id": 1,
-  "resume_id": 1,
-  "job_description": "Seeking a Backend Engineer proficient in Python, FastAPI, Docker, Kubernetes, and AWS.",
-  "extracted_skills": ["Docker", "FastAPI", "Git", "PostgreSQL", "Python", "React", "Redis"],
-  "education_data": [
-    {
-      "degree": "BACHELOR OF TECHNOLOGY",
-      "institution": "Delhi Technological University",
-      "year": "2022",
-      "description": "Bachelor of Technology in Computer Science, Delhi Technological University, 2022"
-    }
-  ],
-  "experience_data": [
-    {
-      "role": "Software Engineer",
-      "company": "CloudSystems Inc",
-      "duration": "Jan 2022 to Present",
-      "description": "Software Engineer - CloudSystems Inc - Jan 2022 to Present"
-    }
-  ],
-  "matched_skills": ["Docker", "FastAPI", "Python"],
-  "missing_skills": ["AWS", "Kubernetes"],
-  "match_score": 60.0,
-  "recommendations": [
-    "Target Skill Development: Consider acquiring or highlighting hands-on project experience in: AWS, Kubernetes.",
-    "Quantifiable Achievements: Strengthen bullet points by quantifying accomplishments with measurable metrics (e.g., % latency reduction, user scale, efficiency gains)."
-  ],
-  "created_at": "2026-09-22T16:25:00Z",
-  "updated_at": "2026-09-22T16:25:00Z"
-}
-```
-
-### `GET /api/resumes/{resume_id}/analyses`
-Retrieves historical analysis records for a resume.
-
-### `GET /api/resumes/{resume_id}/analyses/{analysis_id}`
-Retrieves a specific analysis scorecard by ID. Enforces ownership check.
-
----
-
-## 6. Career Profile & Personalized Career Roadmap Endpoints
-
-### `POST /api/career/profile`
-Creates or idempotently updates the career profile for the requesting user.
-- **Request Body (`application/json`):**
-```json
-{
-  "degree": "B.Tech in Computer Science",
-  "current_skills": ["Python", "FastAPI", "Git"],
-  "experience": "1 year building backend REST APIs",
-  "interests": ["Distributed Systems", "Cloud Computing"],
-  "target_role": "Backend Developer"
-}
-```
-- **Response (201 Created):** Full `CareerProfileRead` object.
-
-### `GET /api/career/profile`
-Retrieves the active career profile of the requesting user.
-- **Headers:** `X-User-Id` (optional)
-- **Response (200 OK / 404 Not Found):** `CareerProfileRead` object.
-
-### `PUT /api/career/profile`
-Updates specific fields of the career profile.
-- **Request Body (`application/json`):** Partial profile update payload.
-- **Response (200 OK):** Updated `CareerProfileRead`.
-
-### `DELETE /api/career/profile`
-Deletes the user's career profile and cascades deletion to all linked roadmaps.
-- **Response (200 OK):** `{"message": "Career profile deleted successfully"}`
-
-### `POST /api/career/roadmaps/generate`
-Generates a structured, 12-week career roadmap based on the user's profile and optional resume data.
-- **Request Body (`application/json`, optional):**
-```json
-{
-  "target_role": "Backend Developer",
-  "resume_id": 1
-}
-```
-- **Response (201 Created):** Full `RoadmapRead` object containing `title`, `recommended_skills`, `missing_skills`, `projects`, `learning_order`, `weekly_plan`, `interview_topics`, and `recommendation_reasons`.
-
-### `GET /api/career/roadmaps`
-Lists all roadmaps generated for the requesting user's profile.
-- **Response (200 OK):** Array of `RoadmapRead` objects.
-
-### `GET /api/career/roadmaps/{roadmap_id}`
-Retrieves a specific career roadmap by ID with user ownership validation (403 if unauthorized).
-
-### `DELETE /api/career/roadmaps/{roadmap_id}`
-Deletes a specific career roadmap with ownership enforcement.
+### 5. Career Profile & Personalized Roadmap
+| Method | Path | Status | Description |
+|---|---|---|---|
+| `POST` | `/api/career/profile` | 201 | Create candidate career profile |
+| `GET` | `/api/career/profile` | 200 | Get candidate career profile |
+| `PUT` | `/api/career/profile` | 200 | Update candidate career profile |
+| `DELETE` | `/api/career/profile` | 200 | Delete candidate career profile and roadmaps |
+| `POST` | `/api/career/roadmaps/generate` | 201 | Generate 12-week roadmap (with optional resume) |
+| `GET` | `/api/career/roadmaps` | 200 | List roadmaps for candidate |
+| `GET` | `/api/career/roadmaps/{id}` | 200 | Get specific career roadmap |
+| `DELETE` | `/api/career/roadmaps/{id}` | 200 | Delete specific career roadmap |

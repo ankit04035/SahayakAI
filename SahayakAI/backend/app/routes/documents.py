@@ -4,7 +4,7 @@ Provides endpoints for document upload, retrieval, chunk listing, and deletion.
 """
 
 from typing import List, Optional
-from fastapi import APIRouter, Depends, File, Form, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, Header, Query, UploadFile, status
 from sqlalchemy.orm import Session
 
 from backend.app.database import get_db
@@ -47,8 +47,10 @@ async def upload_document(
     title: Optional[str] = Form(None, description="Optional custom title for the document"),
     user_id: Optional[int] = Form(None, description="Optional user ID; defaults to default dev user"),
     auto_embed: bool = Form(True, description="Whether to automatically compute embeddings upon upload"),
+    x_user_id: Optional[int] = Header(None, alias="X-User-Id", description="Optional user ID header"),
     db: Session = Depends(get_db),
 ) -> DocumentUploadResponse:
+    resolved_user = x_user_id if x_user_id is not None else user_id
     content = await file.read()
     filename = file.filename or "uploaded_document.txt"
 
@@ -56,7 +58,7 @@ async def upload_document(
         file_content=content,
         original_filename=filename,
         db=db,
-        user_id=user_id,
+        user_id=resolved_user,
         title=title,
     )
 
@@ -95,11 +97,13 @@ async def upload_document(
 )
 def get_documents(
     user_id: Optional[int] = Query(None, description="Filter by user ID"),
+    x_user_id: Optional[int] = Header(None, alias="X-User-Id", description="Optional user ID header"),
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(50, ge=1, le=100, description="Maximum records to return"),
     db: Session = Depends(get_db),
 ) -> List[DocumentRead]:
-    return list_documents(db=db, user_id=user_id, skip=skip, limit=limit)
+    resolved_user = x_user_id if x_user_id is not None else user_id
+    return list_documents(db=db, user_id=resolved_user, skip=skip, limit=limit)
 
 
 @router.get(
@@ -110,9 +114,10 @@ def get_documents(
 )
 def get_document(
     document_id: int,
+    x_user_id: Optional[int] = Header(None, alias="X-User-Id", description="Optional user ID header"),
     db: Session = Depends(get_db),
 ) -> DocumentDetailRead:
-    doc, chunk_count = get_document_by_id(document_id=document_id, db=db)
+    doc, chunk_count = get_document_by_id(document_id=document_id, db=db, user_id=x_user_id)
     stats = compute_text_statistics(doc.extracted_text or "")
     keywords = extract_keywords(doc.extracted_text or "", top_n=10)
 
@@ -148,9 +153,10 @@ def get_chunks(
     document_id: int,
     skip: int = Query(0, ge=0, description="Offset for chunks"),
     limit: int = Query(50, ge=1, le=200, description="Limit for chunks"),
+    x_user_id: Optional[int] = Header(None, alias="X-User-Id", description="Optional user ID header"),
     db: Session = Depends(get_db),
 ) -> List[DocumentChunkRead]:
-    return get_document_chunks(document_id=document_id, db=db, skip=skip, limit=limit)
+    return get_document_chunks(document_id=document_id, db=db, skip=skip, limit=limit, user_id=x_user_id)
 
 
 @router.delete(
@@ -160,9 +166,10 @@ def get_chunks(
 )
 def remove_document(
     document_id: int,
+    x_user_id: Optional[int] = Header(None, alias="X-User-Id", description="Optional user ID header"),
     db: Session = Depends(get_db),
 ) -> dict:
-    delete_document(document_id=document_id, db=db)
+    delete_document(document_id=document_id, db=db, user_id=x_user_id)
     return {"message": "Document deleted successfully", "id": document_id}
 
 
@@ -174,8 +181,11 @@ def remove_document(
 )
 def embed_chunks(
     document_id: int,
+    x_user_id: Optional[int] = Header(None, alias="X-User-Id", description="Optional user ID header"),
     db: Session = Depends(get_db),
 ) -> EmbedChunksResponse:
+    # Verify ownership before embedding
+    get_document_by_id(document_id=document_id, db=db, user_id=x_user_id)
     count = embed_document_chunks(document_id=document_id, db=db)
     return EmbedChunksResponse(
         document_id=document_id,
@@ -193,8 +203,11 @@ def embed_chunks(
 def ask_document_question(
     document_id: int,
     request: RAGQueryRequest,
+    x_user_id: Optional[int] = Header(None, alias="X-User-Id", description="Optional user ID header"),
     db: Session = Depends(get_db),
 ) -> RAGQueryResponse:
+    # Verify ownership before query
+    get_document_by_id(document_id=document_id, db=db, user_id=x_user_id)
     result = query_document(
         document_id=document_id,
         question=request.question,

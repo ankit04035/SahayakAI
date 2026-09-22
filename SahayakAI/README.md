@@ -1,185 +1,104 @@
-# SahayakAI
+# SahayakAI — AI-Powered Career & Academic Mentor
 
-SahayakAI is an intelligent career guidance and productivity assistant built to empower learners, job-seekers, and working professionals with automated resume analysis, personalized career roadmap generation, domain-grounded conversational intelligence via Retrieval-Augmented Generation (RAG), and curated learning recommendations. Designed with a modular, enterprise-ready architecture, SahayakAI leverages FastAPI for high-performance backend serving, pluggable LLM provider adapters, and localized data processing to deliver contextual, actionable insights.
+[![Tests: 236 Passed](https://img.shields.io/badge/Tests-236%20Passed-brightgreen.svg)]()
+[![Python: 3.12](https://img.shields.io/badge/Python-3.12-blue.svg)]()
+[![FastAPI: 0.115](https://img.shields.io/badge/FastAPI-0.115-teal.svg)]()
+[![Model: all--MiniLM--L6--v2](https://img.shields.io/badge/Embeddings-all--MiniLM--L6--v2-orange.svg)]()
+[![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)]()
 
----
-
-## Current Project Status
-
-**Current Phase:** Phase 10 — Career Profile & Personalized Career Roadmap  
-The repository has established:
-1. Architecture Freeze baseline specifications ([`docs/architecture_freeze.md`](docs/architecture_freeze.md)).
-2. Complete FastAPI backend foundation with centralized error handling and health checks.
-3. Complete SQLAlchemy 2.0 ORM persistence layer with 9 models, UTC timestamps, and cascading delete rules ([`docs/database.md`](docs/database.md)).
-4. Pluggable, vendor-neutral GenAI Provider Abstraction Layer supporting zero-key deterministic Demo Mode, OpenAI-compatible endpoints, and Google Gemini with defensive secret sanitization ([`docs/genai_providers.md`](docs/genai_providers.md)).
-5. Real document processing and core NLP pipeline supporting PDF and TXT uploads, safe sanitization, tokenization, keyword extraction, and chunk persistence ([`docs/document_processing.md`](docs/document_processing.md)).
-6. Sentence-Transformer embedding layer using `all-MiniLM-L6-v2` (384 dimensions), supporting offline caching, batch chunk embeddings, and zero-pickle vector persistence ([`docs/embedding_pipeline.md`](docs/embedding_pipeline.md)).
-7. Grounded Vector Retrieval and RAG Pipeline with cosine similarity, similarity threshold gating, deduplication, character budget protection, prompt injection guardrails, and deterministic Demo Mode citations ([`docs/rag.md`](docs/rag.md), [`docs/api.md`](docs/api.md)).
-8. Study Assistant & Document-Grounded Chat with multi-turn bounded history, document grounding, citation tracking, and general study mentoring ([`docs/chat.md`](docs/chat.md), [`docs/api.md`](docs/api.md)).
-9. Resume Analyzer & ATS Scorecard with deterministic section extraction, alias-resilient skill normalization, transparent match scoring formula, traceable recommendations, and cascade persistence ([`docs/resume_analyzer.md`](docs/resume_analyzer.md), [`docs/api.md`](docs/api.md)). (200 automated tests passing).
-10. Career Profile & Personalized Career Roadmap with curated role taxonomy, deterministic skill gaps, 12-week progression plans, resume integration, and AI advisory reasoning ([`docs/career_roadmap.md`](docs/career_roadmap.md), [`docs/api.md`](docs/api.md)).
+> **SahayakAI** is an intelligent, offline-capable, and privacy-first career advancement and study copilot. Built for students and early-career developers, SahayakAI integrates reference document processing, semantic vector search (RAG), conversational study assistance, transparent ATS resume scoring, and milestone-based career roadmap generation into a hardened, production-ready backend.
 
 ---
 
-## Planned Modules
+## Current Status: STEP 11 Complete ✅
 
-1. **FastAPI Application Backend (`backend/app/routes/`, `backend/app/services/`)**:
-   High-throughput asynchronous REST API providing validation, orchestration, and request lifecycle management.
-
-2. **Resume Analyzer (`backend/app/nlp/`, `backend/app/services/`)**:
-   Document ingestion engine extracting structured skills, experience history, and candidate profiles from PDF/DOCX files with scoring and feedback metrics.
-
-3. **Career Roadmap Generator (`backend/app/services/`, `backend/app/ml/`)**:
-   AI-driven progression model mapping out milestone-based skill acquisition and career advancement strategies based on user goals and industry requirements.
-
-4. **RAG Knowledge Base Assistant (`backend/app/rag/`, `backend/app/providers/`)**:
-   Retrieval-Augmented Generation engine combining localized vector similarity search with language models to deliver accurate, grounded domain Q&A.
-
-5. **AI Provider Adapters (`backend/app/providers/`)**:
-   Unified provider abstraction supporting OpenAI, Google Gemini, Hugging Face, and local models.
-
-6. **Frontend Interface (`frontend/`)**:
-   Modern, responsive user interface for document uploads, interactive roadmap visualization, and conversational assistance.
+- **Step 2:** FastAPI Foundation & Structured Errors ✅
+- **Step 3:** SQLAlchemy Models & Database Schemas ✅
+- **Step 4:** AI Provider Abstraction (`DemoProvider`, `OpenAICompatibleProvider`, `GeminiProvider`) ✅
+- **Step 5:** Document Processing & Boundary-Aware NLP Chunking ✅
+- **Step 6:** Transformer Sentence Embeddings (`all-MiniLM-L6-v2`, 384-dim) ✅
+- **Step 7:** Vector Retrieval & Grounded RAG Pipeline ✅
+- **Step 8:** Conversational Study Assistant & Multi-Turn Chat ✅
+- **Step 9:** Resume Analyzer & ATS Evaluation Scorecard ✅
+- **Step 10:** Career Profile & Personalized Career Roadmap ✅
+- **Step 11:** Backend Integration, API Contract Hardening & Pre-Frontend Verification ✅
+  - **236 / 236 Automated Tests Passing (100% Green)**
+  - **End-to-End Synthetic User Journey Script (`scripts/verify_step11.py`) Passing Steps A–P**
+  - **Frontend Contract Documented (`docs/frontend_contract.md`)**
+  - **100% Dual-Directory Parity (`/` and `SahayakAI/`)**
 
 ---
 
-## Basic Directory Structure
+## Key Features
 
-```text
-SahayakAI/
-├── README.md
-├── .env.example
-├── .gitignore
-├── requirements.txt
-├── backend/
-│   └── app/
-│       ├── __init__.py
-│       ├── models/
-│       ├── schemas/
-│       ├── routes/
-│       ├── services/
-│       ├── ml/
-│       ├── nlp/
-│       ├── rag/
-│       ├── providers/
-│       └── utils/
-├── frontend/
-├── tests/
-├── scripts/
-├── docs/
-├── data/
-├── models/
-└── uploads/
-```
-
-### Directory Roles & Responsibilities
-
-| Directory / File | Description |
-| :--- | :--- |
-| `README.md` | Project overview, architectural documentation, and usage instructions |
-| `.env.example` | Environment variable template with documented placeholders |
-| `.gitignore` | Security-hardened exclusions for secrets, venvs, caches, and datasets |
-| `requirements.txt` | Minimal dependencies pinned to core architectural requirements |
-| `backend/app/models/` | Domain entities and database schema models |
-| `backend/app/schemas/` | Pydantic schemas for request validation and serialization |
-| `backend/app/routes/` | FastAPI endpoint routers and API controllers |
-| `backend/app/services/` | Business logic services and cross-module workflows |
-| `backend/app/ml/` | Machine learning model loaders, inference pipelines, and trainers |
-| `backend/app/nlp/` | Natural language processing, tokenization, and resume parsing |
-| `backend/app/rag/` | RAG retrieval, vector search, chunking, and document indexing |
-| `backend/app/providers/`| Pluggable multi-provider LLM adapters (Demo, OpenAI, Gemini) |
-| `backend/app/utils/` | Shared utilities, logging configuration, and helpers |
-| `frontend/` | Client-side user interface source code |
-| `tests/` | Unit, integration, and end-to-end automated test suites |
-| `scripts/` | Automation, data preparation, and maintenance utilities |
-| `docs/` | Architecture freeze specifications and technical guides |
-| `data/` | Local datasets and vector store indices (git-ignored) |
-| `models/` | Saved model weights, caches, and checkpoints (git-ignored) |
-| `uploads/` | Ephemeral uploaded documents and resumes (git-ignored) |
+1. **Deterministic Demo Mode**: Complete offline operation with zero API keys or billing overhead.
+2. **Document Study & Grounded Chat**: Upload PDF/TXT study guides and ask document-grounded questions with traceable citation sources.
+3. **Transparent ATS Resume Analyzer**: Skill extraction, alias normalization, and transparent scorecard matching against target job descriptions.
+4. **Milestone Career Roadmaps**: 12-week pedagogical skill roadmaps, project recommendations, and technical interview questions based on curated role taxonomies.
+5. **Strict User-Scoping Security**: Per-user resource isolation across all endpoints via `X-User-Id` header (HTTP 403 on cross-user access).
+6. **Hardened API Contracts**: Uniform error envelopes, OpenAPI 3.x schema, Swagger UI (`/docs`), and ReDoc (`/redoc`).
 
 ---
 
-## Getting Started
+## Quick Start
 
-### 1. Prerequisites
-* Python 3.10+ (Recommended: Python 3.12)
-* Git
-
-### 2. Environment Setup
-Create and activate a virtual environment:
-```bash
-# Windows (PowerShell)
+### 1. Prerequisites & Installation
+```powershell
 python -m venv .venv
-.venv\Scripts\Activate.ps1
-
-# Linux / macOS
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-### 3. Install Dependencies
-```bash
-pip install --upgrade pip
+.venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 4. Configure Environment Variables
-Copy `.env.example` to `.env` and adjust configuration:
-```bash
-# Windows
-Copy-Item .env.example .env
-
-# Linux / macOS
-cp .env.example .env
-```
-
-*Note: By default, `AI_PROVIDER=demo` is configured, allowing the entire application and test suite to run without any external API keys or cloud accounts.*
-
-### 5. Download / Cache Embedding Model (Optional Pre-load)
-```bash
-python scripts/download_embedding_model.py
-```
-*(Pre-loads and validates `all-MiniLM-L6-v2` into local Hugging Face cache so runtime inference runs completely offline).*
-
-### 6. Run the Server
-```bash
-python -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
-```
-Verify health status at `http://127.0.0.1:8000/api/health`.
-
-### 7. Run Automated Tests
-```bash
+### 2. Run Test Suite
+```powershell
 python -m pytest -v
 ```
+*(All 236 tests pass in ~45 seconds on standard CPU)*
 
-### 8. Document Ingestion & RAG Q&A Quickstart
-
-Upload a document with automatic embedding generation:
-```bash
-curl -X POST "http://127.0.0.1:8000/api/documents/upload" \
-  -F "file=@notes.txt" \
-  -F "auto_embed=true"
+### 3. Run Live End-to-End Synthetic Verification
+```powershell
+python scripts/verify_step11.py
 ```
 
-Ask a grounded question using localized vector retrieval:
-```bash
-curl -X POST "http://127.0.0.1:8000/api/documents/1/ask" \
-  -H "Content-Type: application/json" \
-  -d '{"question": "What are the primary concepts explained in this document?", "top_k": 3}'
+### 4. Start Development Server
+```powershell
+python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
+- Interactive API Docs: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
+- Health Check: `http://localhost:8000/api/health`
 
-### 9. Study Assistant Chat Quickstart
+---
 
-Create a chat session:
-```bash
-curl -X POST "http://127.0.0.1:8000/api/chat/sessions" \
-  -H "Content-Type: application/json" \
-  -d '{"title": "Algorithms Study Session"}'
-```
+## API Summary
 
-Send a question to the study assistant:
-```bash
-curl -X POST "http://127.0.0.1:8000/api/chat/sessions/1/messages" \
-  -H "Content-Type: application/json" \
-  -d '{"message": "Explain how Dijkstra\'s algorithm works step by step."}'
-```
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/health` | System liveness, database status, AI provider mode |
+| `POST` | `/api/documents/upload` | Upload & chunk PDF/TXT study documents |
+| `GET` | `/api/documents` | List uploaded reference documents |
+| `GET` | `/api/documents/{id}` | Get document metadata, extracted text & stats |
+| `DELETE` | `/api/documents/{id}` | Delete document and cascade chunks / disk files |
+| `POST` | `/api/documents/{id}/embed` | Compute and store 384-dim chunk embeddings |
+| `POST` | `/api/documents/{id}/ask` | Direct RAG semantic query against document |
+| `POST` | `/api/chat/sessions` | Create conversational study chat session |
+| `GET` | `/api/chat/sessions` | List user chat sessions |
+| `POST` | `/api/chat/sessions/{id}/messages` | Send grounded chat message (RAG synthesis) |
+| `GET` | `/api/chat/sessions/{id}/messages` | List conversation message history |
+| `POST` | `/api/resumes` | Upload candidate resume (.pdf or .txt) |
+| `GET` | `/api/resumes` | List candidate resumes |
+| `POST` | `/api/resumes/{id}/analyze` | Compute ATS match score & missing skills against JD |
+| `POST` | `/api/career/profile` | Upsert candidate career profile |
+| `GET` | `/api/career/profile` | Get candidate career profile |
+| `POST` | `/api/career/roadmaps/generate` | Generate 12-week roadmap (with optional resume) |
+| `GET` | `/api/career/roadmaps` | List user career roadmaps |
+| `GET` | `/api/career/roadmaps/{id}` | Get specific career roadmap |
+
+---
+
+## Documentation
+- [Frontend Integration Contract](docs/frontend_contract.md)
+- [System Architecture](docs/architecture.md)
+- [Architecture Decision Records (ADRs)](docs/decisions.md)
+- [API Reference](docs/api.md)
+- [Career Roadmap Specification](docs/career_roadmap.md)

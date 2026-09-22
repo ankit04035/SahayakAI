@@ -461,15 +461,14 @@ def get_roadmap(db: Session, roadmap_id: int, user_id: Optional[int] = None) -> 
     """
     Retrieve a specific roadmap with ownership enforcement.
     """
-    profile = get_career_profile(db=db, user_id=user_id)
     roadmap = db.query(Roadmap).filter(Roadmap.id == roadmap_id).first()
-
     if not roadmap:
         raise RoadmapNotFoundError(roadmap_id=roadmap_id)
 
-    if roadmap.career_profile_id != profile.id:
-        logger.warning("Access denied: user %d attempted to access roadmap %d owned by profile %d", profile.user_id, roadmap.id, roadmap.career_profile_id)
-        raise RoadmapAccessDeniedError(roadmap_id=roadmap_id)
+    if user_id is not None:
+        if roadmap.career_profile is None or roadmap.career_profile.user_id != user_id:
+            logger.warning("Access denied: user %d attempted to access roadmap %d", user_id, roadmap.id)
+            raise RoadmapAccessDeniedError(roadmap_id=roadmap_id)
 
     return roadmap
 

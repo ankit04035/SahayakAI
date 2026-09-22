@@ -231,10 +231,14 @@ def process_document_upload(
         )
 
 
-def get_document_by_id(document_id: int, db: Session) -> Tuple[Document, int]:
+def get_document_by_id(
+    document_id: int,
+    db: Session,
+    user_id: Optional[int] = None,
+) -> Tuple[Document, int]:
     """
     Retrieve document by ID and count its associated chunks.
-    Raises 404 if not found.
+    Raises 404 if not found. Raises 403 if user_id is provided and does not match owner.
     """
     doc = db.query(Document).filter(Document.id == document_id).first()
     if not doc:
@@ -242,6 +246,13 @@ def get_document_by_id(document_id: int, db: Session) -> Tuple[Document, int]:
             message=f"Document with ID {document_id} not found.",
             status_code=404,
             error_code="DOCUMENT_NOT_FOUND",
+        )
+    if user_id is not None and doc.user_id != user_id:
+        raise AppException(
+            message="Access to document denied",
+            status_code=403,
+            error_code="DOCUMENT_ACCESS_DENIED",
+            details={"document_id": document_id},
         )
     chunk_count = db.query(DocumentChunk).filter(DocumentChunk.document_id == document_id).count()
     return doc, chunk_count
@@ -252,12 +263,14 @@ def get_document_chunks(
     db: Session,
     skip: int = 0,
     limit: int = 100,
+    user_id: Optional[int] = None,
 ) -> List[DocumentChunk]:
     """
     Retrieve paginated chunks for a given document ordered by chunk_index.
+    Enforces user ownership check when user_id is provided.
     """
-    # Verify document exists
-    _ = get_document_by_id(document_id, db)
+    # Verify document exists and check ownership
+    _ = get_document_by_id(document_id, db, user_id=user_id)
     chunks = (
         db.query(DocumentChunk)
         .filter(DocumentChunk.document_id == document_id)
@@ -284,11 +297,16 @@ def list_documents(
     return query.order_by(Document.created_at.desc()).offset(skip).limit(limit).all()
 
 
-def delete_document(document_id: int, db: Session) -> bool:
+def delete_document(
+    document_id: int,
+    db: Session,
+    user_id: Optional[int] = None,
+) -> bool:
     """
     Delete a document from database (cascading chunks) and remove stored disk file.
+    Enforces user ownership check when user_id is provided.
     """
-    doc, _ = get_document_by_id(document_id, db)
+    doc, _ = get_document_by_id(document_id, db, user_id=user_id)
     settings = get_settings()
 
     # Attempt to delete file from disk

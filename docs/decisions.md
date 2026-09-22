@@ -248,3 +248,41 @@ Implement a hybrid two-tier Career Roadmap engine:
 1. **Explainable & Auditable**: Every recommendation directly cites verified competencies and missing requirements.
 2. **Zero-Token Offline Capability**: Completely functional in offline demo mode.
 3. **Reproducible**: Given identical profile inputs, skill gaps and milestones remain constant.
+
+---
+
+## ADR-14: Backend Integration, API Contract Hardening, and Pre-Frontend Verification
+
+### Context
+Steps 2 through 10 created individual backend domain modules:
+- Step 2: FastAPI Foundation & Error Handlers
+- Step 3: SQLAlchemy Database Models & Schemas
+- Step 4: AI Provider Abstraction Layer & Demo Mode
+- Step 5: Document Processing & Core NLP Pipeline
+- Step 6: Transformer Sentence-Embeddings (`all-MiniLM-L6-v2`)
+- Step 7: Vector Retrieval & Cosine Similarity RAG
+- Step 8: Study Assistant & Grounded Chat Sessions
+- Step 9: Resume Analyzer & ATS Scorecard
+- Step 10: Career Profile & Personalized Career Roadmap
+
+Prior to launching frontend development in Step 12, the entire backend needed to be audited, hardened, and verified as a single cohesive system. This required uniform error formatting, standardized pre-auth user scoping via `X-User-Id`, complete cross-module integration tests, hardened endpoints, and a frozen frontend integration contract.
+
+### Decision
+1. **Consistent User-Scoping Across All Domains**:
+   - Align document endpoints (`upload`, `list`, `get`, `chunks`, `delete`, `embed`, `ask`) with the established `X-User-Id` header pattern used in Chat, Resumes, and Career modules.
+   - Cross-user resource access or deletion attempts strictly return `HTTP 403 Forbidden` (`DOCUMENT_ACCESS_DENIED`, `SESSION_ACCESS_DENIED`, `RESUME_ACCESS_DENIED`, `ROADMAP_ACCESS_DENIED`).
+2. **Centralized Error Envelope**:
+   - Standardize all errors under `{"status": "error", "error_code": "...", "message": "...", "details": ...}` with zero internal stack traces or secrets exposed.
+3. **Comprehensive Integration Test Suite**:
+   - Add `tests/integration/test_backend_integration.py` (17 tests) covering lifespan, healthy/degraded health checks, OpenAPI schema integrity, CORS policies, uniform error envelopes, Workflow A (Document RAG), Workflow B (Resume ATS), Workflow C (Career Roadmap), cross-user security isolation, and cascade deletions.
+4. **Synthetic End-to-End User Journey Verification**:
+   - Implement `scripts/verify_step11.py` exercising Steps A through P without external API dependencies.
+5. **Frozen Frontend Contract**:
+   - Author `docs/frontend_contract.md` defining all base URLs, headers, payloads, status codes, and endpoint specifications for Step 12 frontend developers.
+6. **Dual-Directory Parity**:
+   - Maintain 100% file and content parity between repository root and `SahayakAI/`.
+
+### Rationale
+- Guarantees an auditable, reproducible, production-grade API contract.
+- Prevents breaking changes and contract drift during frontend development.
+- Validates 236 green tests across all regression modules with 0 failures.
