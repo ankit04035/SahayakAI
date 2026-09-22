@@ -20,6 +20,17 @@ from backend.app.nlp.chunker import (
     chunk_pages,
     chunk_text,
 )
+from backend.app.nlp.skill_extractor import (
+    SKILL_ALIAS_MAP,
+    extract_skills,
+    normalize_skill,
+)
+from backend.app.nlp.resume_parser import (
+    extract_education,
+    extract_experience,
+    parse_resume_sections,
+    parse_structured_resume,
+)
 
 __all__ = [
     "clean_text",
@@ -32,4 +43,11 @@ __all__ = [
     "ChunkItem",
     "chunk_text",
     "chunk_pages",
+    "SKILL_ALIAS_MAP",
+    "extract_skills",
+    "normalize_skill",
+    "extract_education",
+    "extract_experience",
+    "parse_resume_sections",
+    "parse_structured_resume",
 ]

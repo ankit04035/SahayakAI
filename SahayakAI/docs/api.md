@@ -213,3 +213,87 @@ Submits a user question to the study assistant.
 
 ### `GET /api/chat/sessions/{session_id}/messages`
 Retrieves chronological message history for a session.
+
+---
+
+## 5. Resume Analyzer & ATS Scorecard Endpoints
+
+### `POST /api/resumes`
+Uploads a candidate resume (`.pdf` or `.txt`) with size validation (up to 10MB), path traversal sanitization, and secure disk persistence.
+- **Content-Type:** `multipart/form-data`
+- **Form Fields:** `file` (required), `user_id` (optional)
+- **Headers:** `X-User-Id` (optional)
+- **Response (201 Created):**
+```json
+{
+  "id": 1,
+  "user_id": 1,
+  "original_filename": "ananya_resume.txt",
+  "stored_filename": "a1b2c3d4_ananya_resume.txt",
+  "file_type": ".txt",
+  "file_size": 2048,
+  "processing_status": "completed",
+  "created_at": "2026-09-22T16:20:00Z",
+  "updated_at": "2026-09-22T16:20:00Z"
+}
+```
+
+### `GET /api/resumes`
+Lists all resumes belonging to the requesting user.
+- **Headers:** `X-User-Id` (optional)
+- **Response (200 OK):** Array of resume records.
+
+### `GET /api/resumes/{resume_id}`
+Retrieves metadata for a specific resume. Enforces user ownership (403 if unauthorized).
+
+### `DELETE /api/resumes/{resume_id}`
+Deletes a resume, removes the stored file from disk, and cascades deletion to all associated analysis records.
+
+### `POST /api/resumes/{resume_id}/analyze`
+Extracts structured skills, education, and experience, and evaluates against an optional job description.
+- **Request Body (`application/json`, optional):**
+```json
+{
+  "job_description": "Seeking a Backend Engineer proficient in Python, FastAPI, Docker, Kubernetes, and AWS."
+}
+```
+- **Response (200 OK — With Job Description):**
+```json
+{
+  "id": 1,
+  "resume_id": 1,
+  "job_description": "Seeking a Backend Engineer proficient in Python, FastAPI, Docker, Kubernetes, and AWS.",
+  "extracted_skills": ["Docker", "FastAPI", "Git", "PostgreSQL", "Python", "React", "Redis"],
+  "education_data": [
+    {
+      "degree": "BACHELOR OF TECHNOLOGY",
+      "institution": "Delhi Technological University",
+      "year": "2022",
+      "description": "Bachelor of Technology in Computer Science, Delhi Technological University, 2022"
+    }
+  ],
+  "experience_data": [
+    {
+      "role": "Software Engineer",
+      "company": "CloudSystems Inc",
+      "duration": "Jan 2022 to Present",
+      "description": "Software Engineer - CloudSystems Inc - Jan 2022 to Present"
+    }
+  ],
+  "matched_skills": ["Docker", "FastAPI", "Python"],
+  "missing_skills": ["AWS", "Kubernetes"],
+  "match_score": 60.0,
+  "recommendations": [
+    "Target Skill Development: Consider acquiring or highlighting hands-on project experience in: AWS, Kubernetes.",
+    "Quantifiable Achievements: Strengthen bullet points by quantifying accomplishments with measurable metrics (e.g., % latency reduction, user scale, efficiency gains)."
+  ],
+  "created_at": "2026-09-22T16:25:00Z",
+  "updated_at": "2026-09-22T16:25:00Z"
+}
+```
+
+### `GET /api/resumes/{resume_id}/analyses`
+Retrieves historical analysis records for a resume.
+
+### `GET /api/resumes/{resume_id}/analyses/{analysis_id}`
+Retrieves a specific analysis scorecard by ID. Enforces ownership check.

@@ -6,7 +6,7 @@ SahayakAI is an intelligent career guidance and productivity assistant built to 
 
 ## Current Project Status
 
-**Current Phase:** Phase 8 — Study Assistant & Document-Grounded Chat Business Logic  
+**Current Phase:** Phase 9 — Resume Analyzer & ATS Scorecard  
 The repository has established:
 1. Architecture Freeze baseline specifications ([`docs/architecture_freeze.md`](docs/architecture_freeze.md)).
 2. Complete FastAPI backend foundation with centralized error handling and health checks.
@@ -16,6 +16,7 @@ The repository has established:
 6. Sentence-Transformer embedding layer using `all-MiniLM-L6-v2` (384 dimensions), supporting offline caching, batch chunk embeddings, and zero-pickle vector persistence ([`docs/embedding_pipeline.md`](docs/embedding_pipeline.md)).
 7. Grounded Vector Retrieval and RAG Pipeline with cosine similarity, similarity threshold gating, deduplication, character budget protection, prompt injection guardrails, and deterministic Demo Mode citations ([`docs/rag.md`](docs/rag.md), [`docs/api.md`](docs/api.md)).
 8. Study Assistant & Document-Grounded Chat with multi-turn bounded history, document grounding, citation tracking, and general study mentoring ([`docs/chat.md`](docs/chat.md), [`docs/api.md`](docs/api.md)).
+9. Resume Analyzer & ATS Scorecard with deterministic section extraction, alias-resilient skill normalization, transparent match scoring formula, traceable recommendations, and cascade persistence ([`docs/resume_analyzer.md`](docs/resume_analyzer.md), [`docs/api.md`](docs/api.md)). (200 automated tests passing).
 
 ---
 

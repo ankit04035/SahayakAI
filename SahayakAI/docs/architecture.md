@@ -2,7 +2,7 @@
 
 **Status:** ACTIVE  
 **Version:** 1.2.0  
-**Current Phase:** Completed STEP 8 (Study Assistant & Document-Grounded Chat)
+**Current Phase:** Completed STEP 9 (Resume Analyzer & ATS Scorecard)
 
 ---
 
@@ -19,7 +19,7 @@ The platform is designed following strict layered architecture principles:
    - Embedding & Transformer Engine (`backend/app/rag/` — `all-MiniLM-L6-v2` 384-dimensional sentence-transformers, L2 normalization, in-process model caching, batch encoding, JSON vector persistence).
    - Local RAG Retrieval Engine (STEP 7 Completed — NumPy dot product, cosine similarity search, threshold gating).
    - Study Assistant & Grounded Chat Service (STEP 8 Completed — multi-turn dialogue, bounded history, citation tracking).
-   - Resume ATS Skill Gap Analyzer (Future STEP 9).
+   - Resume ATS Skill Gap Analyzer (STEP 9 Completed — structured parsing, taxonomy normalization, transparent scoring).
    - Dynamic Career Roadmap Synthesizer (Future STEP 9).
 4. **AI Provider Abstraction Layer**: Generic `BaseAIProvider` decoupling domain logic from concrete LLMs (`DemoProvider`, `OpenAICompatibleProvider`, `GeminiProvider`).
 5. **Persistence Layer**: SQLAlchemy 2.0 ORM with SQLite default storage (`data/sahayakai.db`) and strict referential integrity (`PRAGMA foreign_keys=ON`).
@@ -85,3 +85,5 @@ graph TD
 - **Architecture Decision Records**: Documented in [`docs/decisions.md`](decisions.md).
 - **Generative AI Providers**: Complete specification in [`docs/genai_providers.md`](genai_providers.md).
 - **Architecture Freeze Baseline**: Verified in [`docs/architecture_freeze.md`](architecture_freeze.md).
+
+- **Resume Analyzer**: Detailed architecture and ATS scoring formulas in [`docs/resume_analyzer.md`](resume_analyzer.md).
