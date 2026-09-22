@@ -28,8 +28,11 @@ if (typeof globalThis !== 'undefined') {
   Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock, writable: true });
 }
 
-// Polyfill window.scrollTo
+// Polyfill window.scrollTo and scrollIntoView
 Object.defineProperty(window, 'scrollTo', { value: () => {}, writable: true });
+if (typeof window.HTMLElement !== 'undefined') {
+  window.HTMLElement.prototype.scrollIntoView = function () {};
+}
 
 afterEach(() => {
   cleanup();

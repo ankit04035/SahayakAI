@@ -3,7 +3,7 @@ ChatSession and ChatMessage Model Definitions.
 Represents conversational interactions and citation sources between user and SahayakAI.
 """
 
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, JSON, CheckConstraint, DateTime
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, JSON, CheckConstraint
 from sqlalchemy.orm import relationship
 from backend.app.database import Base
 from backend.app.models.base import TimestampMixin, UTCDateTime, utc_now

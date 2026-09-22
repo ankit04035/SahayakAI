@@ -69,7 +69,7 @@ class Settings(BaseSettings):
 
     # CORS Settings
     CORS_ORIGINS: Union[List[str], str] = Field(
-        default=["http://localhost:5173"],
+        default=["http://localhost:5173", "http://127.0.0.1:5173"],
         description="Allowed CORS origins list or comma-separated string",
     )
 
@@ -197,7 +197,7 @@ class Settings(BaseSettings):
             return [i.strip() for i in v.split(",") if i.strip()]
         elif isinstance(v, (list, tuple)):
             return [str(i).strip() for i in v if str(i).strip()]
-        return ["http://localhost:5173"]
+        return ["http://localhost:5173", "http://127.0.0.1:5173"]
 
     @field_validator("AI_PROVIDER", mode="before")
     @classmethod

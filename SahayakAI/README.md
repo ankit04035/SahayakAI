@@ -1,7 +1,7 @@
 # SahayakAI — AI-Powered Career & Academic Mentor
 
 [![Tests: 236 Backend Passed](https://img.shields.io/badge/Backend%20Tests-236%20Passed-brightgreen.svg)]()
-[![Tests: 5 Frontend Passed](https://img.shields.io/badge/Frontend%20Tests-5%20Passed-brightgreen.svg)]()
+[![Tests: 19 Frontend Passed](https://img.shields.io/badge/Frontend%20Tests-19%20Passed-brightgreen.svg)]()
 [![Python: 3.12](https://img.shields.io/badge/Python-3.12-blue.svg)]()
 [![FastAPI: 0.115](https://img.shields.io/badge/FastAPI-0.115-teal.svg)]()
 [![React: 18.3](https://img.shields.io/badge/React-18.3-61dafb.svg)]()
@@ -12,7 +12,7 @@
 
 ---
 
-## Current Status: STEP 12 Complete ✅
+## Current Status: STEP 13 Complete ✅
 
 - **Step 2:** FastAPI Foundation & Structured Errors ✅
 - **Step 3:** SQLAlchemy Models & Database Schemas ✅
@@ -25,13 +25,16 @@
 - **Step 10:** Career Profile & Personalized Career Roadmap ✅
 - **Step 11:** Backend Integration, API Contract Hardening & Pre-Frontend Verification ✅
 - **Step 12:** Modern React + Vite Frontend Application ✅
-  - **Single Page Application with React 18, TypeScript, Vite, and Tailwind CSS**
-  - **6 Core Production Screens**: Dashboard, Study Documents & Inspector, Grounded Study Chat, Resume Analyzer & ATS Scorecard, Career Profile, and 12-Week Career Roadmap
-  - **Pre-Auth Dev User Switching (`X-User-Id` selector in header)**
-  - **Full Vitest Test Suite Passing (5/5 tests green)**
-  - **Zero-Error TypeScript & Vite Production Build (`npm run build`)**
-  - **236 / 236 Backend Regression Tests Passing (100% Green)**
-  - **100% Dual-Directory Parity (`/` and `SahayakAI/`)**
+- **Step 13:** Frontend ↔ Backend Integration & End-to-End User Flow Verification ✅
+  - **Connected React Frontend with FastAPI Backend over HTTP & CORS**
+  - **Verified Workflows A–E**: Study Documents, Multi-Turn Chat, ATS Resume Analyzer, Career Profile, and 12-Week Roadmap
+  - **Cross-User Scoping Verified**: User 1 vs User 2 isolation enforced via `X-User-Id`
+  - **Live Verification Script**: `scripts/verify_step13.py` passing 9/9 integration steps
+  - **Frontend Tests**: 19 / 19 Vitest tests passing (100% green across 4 test suites)
+  - **Backend Regression Tests**: 236 / 236 pytest tests passing (100% green)
+  - **Production Build**: Zero-error Vite production build (`npm run build`)
+  - **Security Audit**: Zero hardcoded provider secrets or API keys in frontend bundles
+  - **Dual-Directory Parity**: 100% SHA-256 match between root and `SahayakAI/`
 
 ---
 
@@ -42,7 +45,7 @@
 3. **Transparent ATS Resume Analyzer**: Skill extraction, alias normalization, and transparent scorecard matching against target job descriptions.
 4. **Milestone Career Roadmaps**: 12-week pedagogical skill roadmaps across 6 bi-weekly phases, project recommendations, and technical interview questions based on curated role taxonomies.
 5. **Modern Responsive UI**: Clean, accessible, Tailwind CSS styled components with responsive mobile drawer, live health polling, and Dev User context switching.
-6. **Strict User-Scoping Security**: Per-user resource isolation across all endpoints via `X-User-Id` header (HTTP 403 on cross-user access).
+6. **Strict User-Scoping Security**: Per-user resource isolation across all endpoints via `X-User-Id` header (HTTP 403 / 404 on cross-user access).
 7. **Hardened API Contracts**: Uniform error envelopes, OpenAPI 3.x schema, Swagger UI (`/docs`), and ReDoc (`/redoc`).
 
 ---
@@ -54,7 +57,7 @@
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
-python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
+python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 API docs will be available at:
 - Swagger: `http://localhost:8000/docs`
@@ -68,19 +71,25 @@ npm run dev
 ```
 Open `http://localhost:5173` in your browser.
 
-### 3. Run Backend Test Suite
+### 3. Run End-to-End Integration Verification
+```powershell
+python scripts/verify_step13.py
+```
+
+### 4. Run Backend Test Suite
 ```powershell
 python -m pytest -v
 ```
 *(All 236 tests pass in ~35 seconds on standard CPU)*
 
-### 4. Run Frontend Test Suite
+### 5. Run Frontend Test Suite
 ```powershell
 cd frontend
 npm test
 ```
+*(All 19 tests pass)*
 
-### 5. Build Frontend for Production
+### 6. Build Frontend for Production
 ```powershell
 cd frontend
 npm run build
