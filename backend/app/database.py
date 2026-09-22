@@ -1,0 +1,59 @@
+"""
+Database Foundation Module.
+Manages SQLAlchemy engine, session factory, base model class,
+session dependency, and connectivity verification.
+"""
+
+from pathlib import Path
+from typing import Generator, Tuple
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import declarative_base, sessionmaker, Session
+
+from backend.app.config import get_settings
+
+settings = get_settings()
+
+connect_args = {}
+if settings.DATABASE_URL.startswith("sqlite"):
+    connect_args["check_same_thread"] = False
+    if ":///" in settings.DATABASE_URL:
+        db_path_part = settings.DATABASE_URL.split(":///", 1)[1]
+        if db_path_part and not db_path_part.startswith(":memory:"):
+            db_path = Path(db_path_part)
+            db_path.parent.mkdir(parents=True, exist_ok=True)
+
+engine = create_engine(
+    settings.DATABASE_URL,
+    connect_args=connect_args,
+    pool_pre_ping=True,
+)
+
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine,
+)
+
+Base = declarative_base()
+
+
+def get_db() -> Generator[Session, None, None]:
+    """Dependency providing a transactional database session."""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+def check_database_connection() -> Tuple[bool, str]:
+    """
+    Verify database connectivity without assuming any schema/table existence.
+    Returns (is_connected, message).
+    """
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+        return True, "ok"
+    except Exception as exc:
+        return False, str(exc)
