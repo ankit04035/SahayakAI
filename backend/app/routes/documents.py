@@ -16,6 +16,14 @@ from backend.app.schemas.document import (
     DocumentRead,
     DocumentUploadResponse,
 )
+from backend.app.schemas.rag import (
+    EmbedChunksResponse,
+    RAGQueryRequest,
+    RAGQueryResponse,
+    SourceReferenceSchema,
+)
+from backend.app.rag.embedding_service import embed_document_chunks
+from backend.app.rag.rag_service import query_document
 from backend.app.services.document_service import (
     delete_document,
     get_document_by_id,
@@ -38,6 +46,7 @@ async def upload_document(
     file: UploadFile = File(..., description="Document file (.pdf or .txt)"),
     title: Optional[str] = Form(None, description="Optional custom title for the document"),
     user_id: Optional[int] = Form(None, description="Optional user ID; defaults to default dev user"),
+    auto_embed: bool = Form(True, description="Whether to automatically compute embeddings upon upload"),
     db: Session = Depends(get_db),
 ) -> DocumentUploadResponse:
     content = await file.read()
@@ -50,6 +59,13 @@ async def upload_document(
         user_id=user_id,
         title=title,
     )
+
+    # Automatically compute embeddings if requested and chunks exist
+    if auto_embed and chunk_count > 0:
+        try:
+            embed_document_chunks(document_id=doc.id, db=db)
+        except Exception:
+            pass
 
     return DocumentUploadResponse(
         id=doc.id,
@@ -148,3 +164,59 @@ def remove_document(
 ) -> dict:
     delete_document(document_id=document_id, db=db)
     return {"message": "Document deleted successfully", "id": document_id}
+
+
+@router.post(
+    "/{document_id}/embed",
+    response_model=EmbedChunksResponse,
+    summary="Compute and persist embeddings for document chunks",
+    description="Generates 384-dimensional SentenceTransformer embeddings for all chunks of the specified document.",
+)
+def embed_chunks(
+    document_id: int,
+    db: Session = Depends(get_db),
+) -> EmbedChunksResponse:
+    count = embed_document_chunks(document_id=document_id, db=db)
+    return EmbedChunksResponse(
+        document_id=document_id,
+        embedded_chunks=count,
+        status="completed",
+    )
+
+
+@router.post(
+    "/{document_id}/ask",
+    response_model=RAGQueryResponse,
+    summary="Ask a question grounded in an uploaded document",
+    description="Performs semantic vector retrieval against document chunks and generates an evidence-grounded answer using the configured AI provider.",
+)
+def ask_document_question(
+    document_id: int,
+    request: RAGQueryRequest,
+    db: Session = Depends(get_db),
+) -> RAGQueryResponse:
+    result = query_document(
+        document_id=document_id,
+        question=request.question,
+        db=db,
+        top_k=request.top_k,
+        similarity_threshold=request.similarity_threshold,
+    )
+    return RAGQueryResponse(
+        answer=result.answer,
+        grounded=result.grounded,
+        provider=result.provider,
+        model=result.model,
+        sources=[
+            SourceReferenceSchema(
+                chunk_id=s.chunk_id,
+                chunk_index=s.chunk_index,
+                page=s.page,
+                similarity=s.similarity,
+            )
+            for s in result.sources
+        ],
+        query=result.query,
+        retrieved_count=result.retrieved_count,
+        insufficient_evidence=result.insufficient_evidence,
+    )

@@ -129,6 +129,32 @@ class Settings(BaseSettings):
         description="Optional local directory for caching transformer model weights",
     )
 
+    # Vector Retrieval and RAG Settings (Step 7)
+    RAG_TOP_K: int = Field(
+        default=5,
+        gt=0,
+        le=50,
+        description="Default number of top chunks to retrieve for RAG",
+    )
+    RAG_SIMILARITY_THRESHOLD: float = Field(
+        default=0.35,
+        ge=0.0,
+        le=1.0,
+        description="Minimum cosine similarity threshold for retrieved chunks",
+    )
+    RAG_MAX_CONTEXT_CHARS: int = Field(
+        default=12000,
+        gt=100,
+        le=100000,
+        description="Maximum total characters of retrieved context passed to LLM",
+    )
+    RAG_MAX_QUESTION_CHARS: int = Field(
+        default=2000,
+        gt=0,
+        le=10000,
+        description="Maximum question character length",
+    )
+
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:

@@ -42,6 +42,12 @@ from backend.app.schemas.career import (
     RoadmapCreate,
     RoadmapRead,
 )
+from backend.app.schemas.rag import (
+    EmbedChunksResponse,
+    RAGQueryRequest,
+    RAGQueryResponse,
+    SourceReferenceSchema,
+)
 
 __all__ = [
     "TimestampSchema",
@@ -78,4 +84,8 @@ __all__ = [
     "RoadmapBase",
     "RoadmapCreate",
     "RoadmapRead",
+    "RAGQueryRequest",
+    "RAGQueryResponse",
+    "SourceReferenceSchema",
+    "EmbedChunksResponse",
 ]
