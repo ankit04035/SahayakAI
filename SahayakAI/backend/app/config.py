@@ -32,9 +32,39 @@ class Settings(BaseSettings):
         default=None,
         description="OpenAI API key (optional, not required in demo mode)",
     )
+    OPENAI_BASE_URL: str | None = Field(
+        default=None,
+        description="Optional base URL for OpenAI-compatible providers (Ollama, vLLM, Groq)",
+    )
+    OPENAI_MODEL: str = Field(
+        default="gpt-4o-mini",
+        description="Default model for OpenAI-compatible provider",
+    )
     GEMINI_API_KEY: str | None = Field(
         default=None,
         description="Google Gemini API key (optional, not required in demo mode)",
+    )
+    GEMINI_MODEL: str = Field(
+        default="gemini-1.5-flash",
+        description="Default model for Gemini provider",
+    )
+    AI_TIMEOUT_SECONDS: int = Field(
+        default=30,
+        gt=0,
+        le=300,
+        description="Default timeout in seconds for AI provider calls",
+    )
+    AI_MAX_TOKENS: int = Field(
+        default=1000,
+        gt=0,
+        le=32000,
+        description="Default max tokens for generation",
+    )
+    AI_TEMPERATURE: float = Field(
+        default=0.2,
+        ge=0.0,
+        le=2.0,
+        description="Default sampling temperature for AI generation",
     )
 
     # CORS Settings
@@ -74,7 +104,7 @@ class Settings(BaseSettings):
     def validate_ai_provider(cls, v: str) -> str:
         if isinstance(v, str):
             val = v.lower().strip()
-            if val in {"demo", "openai", "gemini"}:
+            if val:
                 return val
         return "demo"
 

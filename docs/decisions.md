@@ -142,3 +142,39 @@ Implement explicit cascading deletion (`cascade="all, delete-orphan"`, `passive_
 3. **Preservation of Conversational Context**: If an uploaded reference document is deleted, associated chat sessions are not destroyed; instead, `ChatSession.document_id` is safely set to `NULL`, preserving conversational history while reflecting the document's removal.
 4. **SQLite Parity with Production RDBMS**: Explicitly enabling foreign key enforcement via SQLite PRAGMA guarantees that development behavior matches production PostgreSQL constraints identically.
 
+---
+
+## ADR-09: Generative AI Provider Abstraction via BaseAIProvider and Factory
+
+### Context
+Higher-level application services (RAG retrieval, Resume Analyzer, Study Assistant, Career Roadmap) require generative LLM capabilities. Binding business logic directly to a proprietary SDK (e.g. `openai` or `google.genai`) risks vendor lock-in, testing complexity, fragile credential handling, and deployment rigidity.
+
+### Decision
+Establish a provider-neutral abstract contract (`BaseAIProvider`) in `backend/app/providers/base.py` defining standardized `generate(prompt, system_prompt=None, temperature=None, max_tokens=None)` semantics returning structured `ProviderResponse` and `UsageMetadata` objects. Concrete implementations (`DemoProvider`, `OpenAICompatibleProvider`, `GeminiProvider`) are instantiated exclusively via a centralized provider factory (`get_provider()`), with lazy client initialization and automated secret sanitization (`sanitize_sensitive_data`).
+
+### Rationale
+1. **Decoupled Architecture**: High-level domain services depend exclusively on the generic `BaseAIProvider` protocol, enabling seamless LLM swapping without code modifications.
+2. **Multi-Model Support**: Supports commercial OpenAI models, self-hosted open-source inference servers (Ollama, vLLM, Groq) via `OPENAI_BASE_URL`, and Google Gemini multimodal models.
+3. **Defensive Security**: API keys are backend-only environment variables; exceptions and logs pass through regex-based credential masking to guarantee zero secret leakage.
+4. **Resilient Failure Modes**: Translates diverse third-party exceptions into controlled, typed application errors (`ProviderAuthenticationError`, `ProviderTimeoutError`, `ProviderRequestError`, `ProviderResponseError`).
+
+---
+
+## ADR-10: Deterministic Zero-Credential Demo Provider Engine
+
+### Context
+Automated CI/CD pipelines, local developer environments, and evaluator test runs often operate without paid API keys or active internet connections. Unhandled missing credentials causing startup crashes create immediate onboarding friction.
+
+### Decision
+Implement `DemoProvider` as the first-class default provider (`AI_PROVIDER=demo`). The engine runs entirely locally on CPU, makes zero network socket connections, requires no API keys, and deterministically synthesizes structured domain responses for 5 core interaction archetypes:
+1. Executive Summaries (`summary`)
+2. Document-Grounded Q&A (`document_grounded`, with explicit separation of citations and synthesis, and safe rejection of missing context)
+3. Multiple Choice Questions (`mcq`)
+4. Career Roadmaps and Learning Milestones (`career`)
+5. General Conceptual Explanations (`explanation`)
+
+### Rationale
+1. **Zero-Friction Evaluation**: Anyone can clone and run the application instantly without external cloud accounts.
+2. **Deterministic Test Verification**: Tests run identically and predictably without flaky network timeouts or non-deterministic token sampling.
+3. **Honest Grounding**: When no reference context is supplied for document-grounded queries, the demo provider explicitly warns that no context exists rather than hallucinating answers.
+
