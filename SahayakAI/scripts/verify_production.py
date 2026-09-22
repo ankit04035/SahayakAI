@@ -322,8 +322,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="SahayakAI Production Verification Suite")
     parser.add_argument(
         "--api-url",
-        default=os.getenv("API_BASE_URL", "http://127.0.0.1:8000/api"),
-        help="API Base URL (e.g., https://sahayakai-backend.onrender.com/api)",
+        default=os.getenv("PRODUCTION_API_BASE_URL") or os.getenv("API_BASE_URL"),
+        help="Public API Base URL (e.g., https://sahayakai-backend.onrender.com/api)",
     )
     parser.add_argument(
         "--local",
@@ -331,5 +331,14 @@ if __name__ == "__main__":
         help="Run in-process local verification using TestClient",
     )
     args = parser.parse_args()
-    is_local_run = args.local or args.api_url in ["local", "in-process", "testserver"]
-    run_production_verification(args.api_url, is_local=is_local_run)
+    if not args.api_url and not args.local:
+        print("ERROR: No production API URL provided.")
+        print("Usage:")
+        print("  python scripts/verify_production.py --api-url https://sahayakai-backend.onrender.com/api")
+        print("  or set environment variable: PRODUCTION_API_BASE_URL")
+        print("  or for local simulation: python scripts/verify_production.py --local")
+        sys.exit(1)
+
+    is_local_run = args.local or (args.api_url and args.api_url.lower() in ["local", "in-process", "testserver"])
+    target_url = args.api_url or "http://testserver/api"
+    run_production_verification(target_url, is_local=is_local_run)
