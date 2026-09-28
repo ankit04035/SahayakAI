@@ -1,21 +1,22 @@
 # ==============================================================================
-# SahayakAI - Foundation Dependencies (Step 2 Baseline)
+# SahayakAI - Foundation Dependencies
 # ==============================================================================
 
 # --- Web Framework & ASGI Server ---
 fastapi>=0.110.0,<1.0.0
 uvicorn[standard]>=0.28.0,<1.0.0
 
-# --- Settings & Validation ---
+# --- Settings, Validation & Email ---
 pydantic>=2.6.0,<3.0.0
 pydantic-settings>=2.2.0,<3.0.0
+email-validator>=2.1.0,<3.0.0
 python-dotenv>=1.0.1,<2.0.0
 
 # --- Database Foundation ---
 sqlalchemy>=2.0.0,<3.0.0
 psycopg2-binary>=2.9.9,<3.0.0
 
-# --- GenAI Provider SDKs (Step 4) ---
+# --- GenAI Provider SDKs ---
 openai>=1.50.0,<2.0.0
 google-genai>=2.0.0,<3.0.0
 
@@ -23,10 +24,10 @@ google-genai>=2.0.0,<3.0.0
 httpx>=0.27.0,<1.0.0
 python-multipart>=0.0.9,<1.0.0
 
-# --- Document Processing (Step 5) ---
+# --- Document Processing ---
 PyMuPDF>=1.24.0,<2.0.0
 
-# --- Embeddings & Transformers (Step 6) ---
+# --- Embeddings & Transformers ---
 sentence-transformers>=3.0.0
 
 # --- Testing Framework ---
