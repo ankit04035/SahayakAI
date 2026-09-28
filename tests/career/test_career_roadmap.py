@@ -470,6 +470,13 @@ class TestSecurityAndAccessIsolation:
 class TestCareerApiEndToEnd:
     """HTTP endpoint workflow tests for profile and roadmap lifecycle."""
 
+    def test_list_roadmaps_without_profile_returns_empty_list(self, client: TestClient, test_users):
+        _, user2 = test_users
+        response = client.get("/api/career/roadmaps", headers={"X-User-Id": str(user2.id)})
+
+        assert response.status_code == 200
+        assert response.json() == []
+
     def test_full_career_lifecycle(self, client: TestClient, test_users):
         user1, _ = test_users
         headers = {"X-User-Id": str(user1.id)}

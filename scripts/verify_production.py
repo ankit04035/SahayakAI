@@ -34,6 +34,8 @@ def run_production_verification(api_base_url: str, is_local: bool = False):
     print(f"{'*' * 70}")
 
     if is_local:
+        os.environ["ENVIRONMENT"] = "test"
+        os.environ["AUTH_REQUIRED"] = "false"
         from starlette.testclient import TestClient
         from backend.app.main import create_app
         client = TestClient(app=create_app(), base_url="http://testserver")

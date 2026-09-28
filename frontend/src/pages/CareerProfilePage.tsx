@@ -46,7 +46,7 @@ export const CareerProfilePage: React.FC = () => {
   const [isCustomRole, setIsCustomRole] = useState(false);
   const [customRoleInput, setCustomRoleInput] = useState('');
   const [degree, setDegree] = useState('');
-  const [experience, setExperience] = useState('Beginner');
+  const [experience, setExperience] = useState('Beginner / Student');
   const [currentSkills, setCurrentSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState('');
   const [interests, setInterests] = useState<string[]>([]);
@@ -177,11 +177,12 @@ export const CareerProfilePage: React.FC = () => {
         <form onSubmit={handleSave} className="space-y-6">
           {/* Target Role */}
           <div>
-            <label className="block text-xs font-bold text-gray-900 uppercase tracking-wider mb-2">
+            <label htmlFor="target-role" className="block text-xs font-bold text-gray-900 uppercase tracking-wider mb-2">
               Target Career Role / Discipline *
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
               <select
+                id="target-role"
                 value={isCustomRole ? 'CUSTOM' : targetRole}
                 onChange={(e) => {
                   if (e.target.value === 'CUSTOM') {
@@ -217,10 +218,11 @@ export const CareerProfilePage: React.FC = () => {
           {/* Degree & Experience */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">
+              <label htmlFor="degree" className="block text-xs font-semibold text-gray-700 mb-1">
                 Degree / Field of Study
               </label>
               <input
+                id="degree"
                 type="text"
                 placeholder="e.g. B.Tech Computer Science, BCA, MS AI"
                 value={degree}
@@ -229,10 +231,11 @@ export const CareerProfilePage: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">
+              <label htmlFor="experience-level" className="block text-xs font-semibold text-gray-700 mb-1">
                 Experience Level
               </label>
               <select
+                id="experience-level"
                 value={experience}
                 onChange={(e) => setExperience(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -251,6 +254,7 @@ export const CareerProfilePage: React.FC = () => {
             </label>
             <div className="flex gap-2 mb-2">
               <input
+                aria-label="Add a skill"
                 type="text"
                 placeholder="Add a skill (e.g. Python, Docker, React, PostgreSQL)..."
                 value={skillInput}
@@ -280,6 +284,7 @@ export const CareerProfilePage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleRemoveSkill(skill)}
+                      aria-label={`Remove ${skill}`}
                       className="text-gray-400 hover:text-red-500"
                     >
                       <X className="w-3 h-3" />
@@ -297,6 +302,7 @@ export const CareerProfilePage: React.FC = () => {
             </label>
             <div className="flex gap-2 mb-2">
               <input
+                aria-label="Add an interest"
                 type="text"
                 placeholder="Add an interest (e.g. Generative AI, Cloud Native, Cybersecurity)..."
                 value={interestInput}
@@ -326,6 +332,7 @@ export const CareerProfilePage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleRemoveInterest(interest)}
+                      aria-label={`Remove ${interest}`}
                       className="text-gray-400 hover:text-red-500"
                     >
                       <X className="w-3 h-3" />
@@ -338,7 +345,7 @@ export const CareerProfilePage: React.FC = () => {
 
           {/* Submit */}
           <div className="pt-4 border-t border-gray-200 flex items-center justify-between">
-            <span className="text-2xs text-gray-400">Scoped to Dev User #{userId}</span>
+            <span className="text-2xs text-gray-400">Scoped to Account #{userId}</span>
             <Button type="submit" isLoading={saving} leftIcon={<Save className="w-4 h-4" />}>
               Save Profile
             </Button>

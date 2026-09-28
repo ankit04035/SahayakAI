@@ -70,11 +70,12 @@ class DemoProvider(BaseAIProvider):
 
     def _synthesize_response(self, prompt: str, system_prompt: Optional[str] = None) -> Tuple[str, str]:
         """Dispatch prompt to deterministic generator based on intent analysis."""
-        lower = prompt.lower()
-
         # 1. Document-Grounded Query Check
         if self._has_document_context_markers(prompt):
             return self._handle_document_grounded_query(prompt), "document_grounded"
+
+        prompt = self._extract_current_question(prompt)
+        lower = prompt.lower()
 
         # 2. Summary Request Check
         if any(w in lower for w in ["summarize", "summary", "tl;dr", "brief overview", "key takeaways", "synopsis"]):
@@ -90,6 +91,14 @@ class DemoProvider(BaseAIProvider):
 
         # 5. General Explanation Fallback
         return self._handle_general_explanation(prompt, system_prompt), "explanation"
+
+    def _extract_current_question(self, prompt: str) -> str:
+        """Keep the current user question separate from bounded chat history."""
+        if not prompt.lstrip().lower().startswith("conversation history:"):
+            return prompt.strip()
+
+        match = re.search(r"\nQuestion:\s*(.*?)\s*$", prompt, re.DOTALL | re.IGNORECASE)
+        return match.group(1).strip() if match else prompt.strip()
 
     def _has_document_context_markers(self, prompt: str) -> bool:
         """Detect whether prompt includes document context delimiters."""
@@ -274,23 +283,47 @@ class DemoProvider(BaseAIProvider):
         )
 
     def _handle_general_explanation(self, prompt: str, system_prompt: Optional[str] = None) -> str:
-        """Fallback explanation generator for general queries."""
+        """Answer common offline demo questions and avoid inventing other answers."""
+        lower = prompt.lower()
+        if "database" in lower and "index" in lower:
+            return (
+                "### How a database index helps a query\n\n"
+                "A database index is an auxiliary data structure that helps the database find rows without scanning the whole table. "
+                "For example, an index on `email` can find a matching user without checking every user row.\n\n"
+                "### How it works\n"
+                "- A **B-tree index** keeps values ordered, so equality and range lookups can narrow the search quickly.\n"
+                "- The query planner chooses an index when its estimated cost is lower than a table scan.\n"
+                "- Indexes speed up many reads, but use disk space and add work to inserts, updates, and deletes.\n\n"
+                "### When to add one\n"
+                "Index columns often used in filters, joins, or ordering, then use `EXPLAIN` to confirm the query planner uses it."
+            )
+
+        if "binary search tree" in lower:
+            return (
+                "### Binary search trees\n\n"
+                "A binary search tree stores values so each node's left subtree contains smaller values and its right subtree contains larger values.\n\n"
+                "- Search, insertion, and deletion take $O(h)$ time, where $h$ is the tree height.\n"
+                "- A balanced tree has height $O(\\log n)$; a skewed tree can degrade to $O(n)$.\n"
+                "- In-order traversal visits values in sorted order.\n\n"
+                "Self-balancing variants such as AVL and red-black trees keep the height logarithmic."
+            )
+
+        if "event loop" in lower or "asynchronous" in lower:
+            return (
+                "### How an asynchronous event loop works\n\n"
+                "An event loop runs ready tasks and pauses tasks while they wait for I/O, allowing other work to proceed on the same thread.\n\n"
+                "1. A coroutine runs until it reaches an `await`.\n"
+                "2. The loop registers the pending I/O and schedules another ready task.\n"
+                "3. When the I/O completes, the paused coroutine becomes ready to resume.\n\n"
+                "This improves concurrency for I/O-bound work; CPU-heavy work needs a process, thread, or other offloading strategy."
+            )
+
         words = [w.capitalize() for w in re.findall(r"\b[A-Za-z]{4,}\b", prompt) if w.lower() not in {"what", "explain", "describe", "tell", "about", "how", "does", "work", "please"}]
         subject = " ".join(words[:3]) if words else "the Requested Subject"
 
-        persona_note = f" (Instruction Persona: {system_prompt})" if system_prompt else ""
-
         return (
-            f"### Overview of {subject}{persona_note}\n\n"
-            f"**Definition:** {subject} represents a core conceptual component designed to deliver predictable, "
-            "scalable, and robust outcomes within modular software architectures.\n\n"
-            "### Fundamental Principles\n"
-            f"1. **Modularity:** Encapsulating {subject} ensures loose coupling and clean interfaces across services.\n"
-            "2. **Predictability:** Consistent handling of inputs guarantees reproducible system state transitions.\n"
-            "3. **Defensive Design:** Explicit boundary validation prevents cascading runtime failures.\n\n"
-            "### Practical Applications\n"
-            f"- Deploying {subject} in distributed or service-oriented architectures.\n"
-            "- Optimizing end-to-end latency and testability through layered abstractions.\n\n"
-            "### Summary\n"
-            f"Mastery of {subject} enables software developers to build resilient, maintainable, and enterprise-grade systems."
+            f"### About {subject}\n\n"
+            "This workspace is using the offline demo provider, so it cannot reliably generate a topic-specific answer for this question. "
+            "Configure an OpenAI-compatible or Gemini provider in the backend to enable generated explanations.\n\n"
+            "Document-grounded chat remains available for questions answered by your uploaded study materials."
         )

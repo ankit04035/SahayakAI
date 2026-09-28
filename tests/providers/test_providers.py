@@ -86,11 +86,26 @@ def test_demo_provider_explanation_style_prompt():
     response = provider.generate(prompt, system_prompt="Expert AI Tutor")
     text = response.generated_text
 
-    assert "Overview of" in text
-    assert "Fundamental Principles" in text
-    assert "Practical Applications" in text
-    assert "Expert AI Tutor" in text
+    assert "asynchronous event loop" in text.lower()
+    assert "I/O-bound" in text
+    assert "Expert AI Tutor" not in text
     assert response.metadata["request_type"] == "explanation"
+
+
+def test_demo_provider_answers_current_chat_question_without_prompt_metadata():
+    provider = DemoProvider()
+    response = provider.generate(
+        prompt=(
+            "Conversation History:\nNone (new conversation)\n\n"
+            "Question:\nExplain how a database index helps a query."
+        ),
+        system_prompt="You are an expert educational mentor and academic tutor. Follow these guidelines.",
+    )
+
+    assert "Conversation History" not in response.generated_text
+    assert "expert educational mentor" not in response.generated_text
+    assert "database index" in response.generated_text.lower()
+    assert "B-tree" in response.generated_text
 
 
 def test_demo_provider_document_context_prompt():

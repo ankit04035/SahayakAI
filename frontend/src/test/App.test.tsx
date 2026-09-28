@@ -1,10 +1,17 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { UserProvider } from '../context/UserContext';
 import App from '../App';
 
 // Mock health and data APIs to avoid network errors during testing
+vi.mock('../api/auth', () => ({
+  getCurrentUser: vi.fn().mockRejectedValue(new Error('Unauthenticated')),
+  registerAccount: vi.fn().mockResolvedValue({ id: 7, name: 'Ada Student', email: 'ada@example.com', created_at: '2026-09-28T00:00:00Z' }),
+  loginAccount: vi.fn(),
+  logoutAccount: vi.fn(),
+}));
+
 vi.mock('../api/health', () => ({
   getHealth: vi.fn().mockResolvedValue({
     status: 'ok',
@@ -36,35 +43,35 @@ describe('SahayakAI Frontend App', () => {
     localStorage.clear();
   });
 
-  it('renders the brand title and navigation links', async () => {
+  it('shows register and sign-in actions to signed-out visitors', async () => {
     render(
       <UserProvider>
         <App />
       </UserProvider>
     );
 
-    // Brand and subtitle
-    expect(screen.getAllByText(/Sahayak/i)[0]).toBeInTheDocument();
-    expect(screen.getAllByText(/Student Assistant/i)[0]).toBeInTheDocument();
-
-    // Primary navigation links in sidebar
-    expect(screen.getAllByText(/Dashboard/i)[0]).toBeInTheDocument();
-    expect(screen.getAllByText(/Study Documents/i)[0]).toBeInTheDocument();
-    expect(screen.getAllByText(/Study Assistant/i)[0]).toBeInTheDocument();
-    expect(screen.getAllByText(/Resume Analyzer/i)[0]).toBeInTheDocument();
-    expect(screen.getAllByText(/Career Profile/i)[0]).toBeInTheDocument();
-    expect(screen.getAllByText(/Career Roadmap/i)[0]).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Register' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Study Documents' })).not.toBeInTheDocument();
   });
 
-  it('renders dev user selector with default user #1', () => {
+  it('registers an account and unlocks the workspace', async () => {
     render(
       <UserProvider>
         <App />
       </UserProvider>
     );
 
-    const userSelect = screen.getByRole('combobox') as HTMLSelectElement;
-    expect(userSelect).toBeInTheDocument();
-    expect(userSelect.value).toBe('1');
+    fireEvent.click(await screen.findByRole('button', { name: 'Register' }));
+    fireEvent.change(screen.getByLabelText('Full name'), { target: { value: 'Ada Student' } });
+    fireEvent.change(screen.getByLabelText('Email address'), { target: { value: 'ada@example.com' } });
+    fireEvent.change(screen.getByLabelText(/Password/), { target: { value: 'correct-horse-battery-17' } });
+    const createButtons = screen.getAllByRole('button', { name: 'Create account' });
+    fireEvent.click(createButtons[createButtons.length - 1]);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Welcome to SahayakAI' })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Study Documents' })).toBeInTheDocument();
+    });
   });
 });

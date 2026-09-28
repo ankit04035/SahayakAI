@@ -453,7 +453,10 @@ def list_roadmaps(db: Session, user_id: Optional[int] = None) -> List[Roadmap]:
     """
     List all roadmaps belonging to the requesting user's career profile.
     """
-    profile = get_career_profile(db=db, user_id=user_id)
+    try:
+        profile = get_career_profile(db=db, user_id=user_id)
+    except CareerProfileNotFoundError:
+        return []
     return db.query(Roadmap).filter(Roadmap.career_profile_id == profile.id).order_by(Roadmap.id.desc()).all()
 
 

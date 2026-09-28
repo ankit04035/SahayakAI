@@ -240,7 +240,7 @@ export const ResumePage: React.FC = () => {
             {selectedResume && (
               <Card
                 title="Run ATS Match Analysis"
-                subtitle={`Targeted for "${selectedResume.filename}"`}
+                subtitle={`Targeted for "${selectedResume.original_filename || selectedResume.filename || 'resume'}"`}
               >
                 <form onSubmit={handleRunAnalysis} className="space-y-4">
                   <div>

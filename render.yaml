@@ -15,6 +15,10 @@ services:
     envVars:
       - key: ENVIRONMENT
         value: production
+      - key: AUTH_REQUIRED
+        value: true
+      - key: AUTH_COOKIE_SECURE
+        value: true
       - key: APP_NAME
         value: SahayakAI
       - key: DEFAULT_AI_PROVIDER

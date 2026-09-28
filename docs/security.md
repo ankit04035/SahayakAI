@@ -21,7 +21,10 @@ All security mechanisms have been formally verified through synthetic automated 
 * **Threat**: Malicious user B manipulates resource identifiers in API requests to inspect, overwrite, or delete user A's study documents, chat histories, resumes, career profiles, or roadmaps.
 * **Mitigation**:
   - Every protected domain entity (`Document`, `ChatSession`, `Resume`, `CareerProfile`, `Roadmap`) is explicitly bound to `user_id`.
-  - The API extracts client identity from the `X-User-Id` request header (or dev query parameter).
+  - Production identity comes from a revocable, opaque, `HttpOnly` session cookie. Passwords are stored as scrypt hashes; raw session tokens are never stored.
+  - The server derives the authenticated `user_id` from the session. A supplied `X-User-Id` header cannot override it; mismatched IDs are rejected with `403`.
+  - State-changing requests require a session-bound `X-CSRF-Token`; cookie settings use `SameSite=Lax` locally and `SameSite=None; Secure` for HTTPS deployments.
+  - `X-User-Id` remains available only when `AUTH_REQUIRED=false` for isolated development/test workflows.
   - Domain service layers execute strict ownership checks prior to performing any read, update, generation, or deletion operation.
   - Unauthorized access attempts immediately raise domain-specific access denial exceptions mapped to `HTTP 403 Forbidden` (`DOCUMENT_ACCESS_DENIED`, `SESSION_ACCESS_DENIED`, `RESUME_ACCESS_DENIED`, `ROADMAP_ACCESS_DENIED`).
   - Cross-user chat message injection and RAG document queries are rejected with `HTTP 403 Forbidden`.

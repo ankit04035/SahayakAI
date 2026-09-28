@@ -7,11 +7,7 @@ import {
   Compass,
   Upload,
   ArrowRight,
-  TrendingUp,
-  Clock,
-  Sparkles,
   BookOpen,
-  CheckCircle2,
 } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { getDocuments } from '../api/documents';
@@ -78,28 +74,27 @@ export const DashboardPage: React.FC = () => {
   const latestRoadmap = roadmaps.length > 0 ? roadmaps[0] : null;
 
   return (
-    <div className="space-y-8">
+    <div className="dashboard dashboard-enter space-y-8">
       {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-primary-900 via-primary-800 to-indigo-900 rounded-2xl p-6 sm:p-8 text-white shadow-md relative overflow-hidden">
-        <div className="absolute right-0 top-0 translate-x-10 -translate-y-10 w-64 h-64 bg-primary-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="dashboard-hero">
         <div className="relative z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-xs text-primary-200 text-xs font-medium mb-3">
-            <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
-            Active Session: Dev User #{userId}
+          <div className="dashboard-context">
+            <span className="dashboard-context-mark" />
+            Your workspace <span aria-hidden="true">/</span> User #{userId}
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">
+          <h1 className="dashboard-title">
             Welcome to SahayakAI
           </h1>
-          <p className="text-primary-100 text-sm sm:text-base leading-relaxed mb-6">
-            Your unified AI-powered assistant for academic document RAG, intelligent study chats, resume ATS optimization, and 12-week personalized career progression.
+          <p className="dashboard-intro">
+            Pick up where you left off, or take one small step toward your next goal.
           </p>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="dashboard-actions flex flex-wrap items-center">
             <Link to="/documents">
               <Button
                 variant="primary"
                 size="sm"
-                className="bg-white text-primary-900 hover:bg-primary-50 focus:ring-white border-0 font-semibold"
+                className="action-main border-0 font-semibold"
                 leftIcon={<Upload className="w-4 h-4 text-primary-700" />}
               >
                 Upload Document
@@ -109,7 +104,7 @@ export const DashboardPage: React.FC = () => {
               <Button
                 variant="secondary"
                 size="sm"
-                className="bg-primary-800/80 text-white border-primary-600 hover:bg-primary-700/80"
+                className="action-secondary"
                 leftIcon={<MessageSquare className="w-4 h-4" />}
               >
                 Start Study Chat
@@ -119,7 +114,7 @@ export const DashboardPage: React.FC = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-primary-100 hover:bg-white/10 hover:text-white"
+                className="action-link hover:bg-white/10 hover:text-white"
                 rightIcon={<ArrowRight className="w-4 h-4" />}
               >
                 View Roadmap
@@ -130,12 +125,12 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="metric-grid">
         {/* Metric 1 */}
-        <Card padding="sm" hoverEffect>
+        <Card className="dashboard-metric" padding="sm" hoverEffect>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Documents</span>
-            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+            <span className="metric-label">Documents</span>
+            <div className="metric-icon">
               <FileText className="w-4 h-4" />
             </div>
           </div>
@@ -143,17 +138,17 @@ export const DashboardPage: React.FC = () => {
             {loading ? (
               <Skeleton width={48} height={28} />
             ) : (
-              <span className="text-2xl font-bold text-gray-900">{documents.length}</span>
+              <span className="metric-value">{documents.length}</span>
             )}
-            <p className="text-xs text-gray-500 mt-1">Processed study materials</p>
+            <p className="metric-caption">Processed study materials</p>
           </div>
         </Card>
 
         {/* Metric 2 */}
-        <Card padding="sm" hoverEffect>
+        <Card className="dashboard-metric" padding="sm" hoverEffect>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Chat Sessions</span>
-            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+            <span className="metric-label">Chat Sessions</span>
+            <div className="metric-icon">
               <MessageSquare className="w-4 h-4" />
             </div>
           </div>
@@ -161,17 +156,17 @@ export const DashboardPage: React.FC = () => {
             {loading ? (
               <Skeleton width={48} height={28} />
             ) : (
-              <span className="text-2xl font-bold text-gray-900">{chatSessions.length}</span>
+              <span className="metric-value">{chatSessions.length}</span>
             )}
-            <p className="text-xs text-gray-500 mt-1">Active study conversations</p>
+            <p className="metric-caption">Active study conversations</p>
           </div>
         </Card>
 
         {/* Metric 3 */}
-        <Card padding="sm" hoverEffect>
+        <Card className="dashboard-metric" padding="sm" hoverEffect>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Resumes</span>
-            <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+            <span className="metric-label">Resumes</span>
+            <div className="metric-icon">
               <Award className="w-4 h-4" />
             </div>
           </div>
@@ -179,17 +174,17 @@ export const DashboardPage: React.FC = () => {
             {loading ? (
               <Skeleton width={48} height={28} />
             ) : (
-              <span className="text-2xl font-bold text-gray-900">{resumes.length}</span>
+              <span className="metric-value">{resumes.length}</span>
             )}
-            <p className="text-xs text-gray-500 mt-1">Uploaded for ATS analysis</p>
+            <p className="metric-caption">Uploaded for ATS analysis</p>
           </div>
         </Card>
 
         {/* Metric 4 */}
-        <Card padding="sm" hoverEffect>
+        <Card className="dashboard-metric" padding="sm" hoverEffect>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Career Track</span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+            <span className="metric-label">Career Track</span>
+            <div className="metric-icon">
               <Compass className="w-4 h-4" />
             </div>
           </div>
@@ -197,11 +192,11 @@ export const DashboardPage: React.FC = () => {
             {loading ? (
               <Skeleton width={80} height={28} />
             ) : (
-              <span className="text-sm font-bold text-gray-900 truncate block">
+              <span className="metric-role truncate">
                 {profile?.target_role || 'Not Set'}
               </span>
             )}
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="metric-caption">
               {latestRoadmap ? '12-Week Roadmap Active' : 'No Roadmap Created'}
             </p>
           </div>
@@ -209,10 +204,11 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {/* Main Grid: Recent Documents & Recent Sessions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="dashboard-columns">
         {/* Recent Documents */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="space-y-4">
           <Card
+            className="dashboard-panel"
             title="Recent Study Documents"
             subtitle="Uploaded lecture notes, textbooks, and research papers"
             action={
@@ -239,21 +235,21 @@ export const DashboardPage: React.FC = () => {
                 </Link>
               </div>
             ) : (
-              <div className="divide-y divide-gray-100">
+              <div className="document-list divide-y divide-gray-100">
                 {documents.slice(0, 4).map((doc) => (
-                  <div key={doc.id} className="py-3 flex items-center justify-between gap-4">
+                  <div key={doc.id} className="document-row py-3 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center shrink-0">
+                      <div className="document-icon shrink-0">
                         <FileText className="w-4 h-4 text-primary-600" />
                       </div>
                       <div className="min-w-0">
                         <Link
                           to={`/documents/${doc.id}`}
-                          className="text-sm font-medium text-gray-900 hover:text-primary-600 truncate block transition"
+                          className="document-link hover:text-primary-600 truncate block transition"
                         >
                           {doc.title || doc.original_filename || doc.filename}
                         </Link>
-                        <div className="flex items-center gap-2 text-2xs text-gray-400 mt-0.5">
+                        <div className="document-meta flex items-center gap-2 mt-0.5">
                           <span>{doc.file_type.toUpperCase()}</span>
                           <span>•</span>
                           <span>{formatFileSize(doc.file_size)}</span>
@@ -281,6 +277,7 @@ export const DashboardPage: React.FC = () => {
           {/* Active Roadmap Preview */}
           {latestRoadmap && (
             <Card
+              className="dashboard-panel"
               title="Active Career Roadmap"
               subtitle={`12-Week progression toward ${(latestRoadmap.target_role || latestRoadmap.title)}`}
               action={
@@ -314,6 +311,7 @@ export const DashboardPage: React.FC = () => {
         {/* Right Column: Chat Sessions & Quick Tips */}
         <div className="space-y-6">
           <Card
+            className="dashboard-panel"
             title="Study Assistant Chats"
             subtitle="Recent multi-turn conversations"
             action={
@@ -344,7 +342,7 @@ export const DashboardPage: React.FC = () => {
                     key={session.id}
                     to="/chat"
                     state={{ activeSessionId: session.id }}
-                    className="block p-3 rounded-lg border border-gray-100 hover:border-primary-200 hover:bg-primary-50/30 transition group"
+                    className="session-link group"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <h4 className="text-xs font-semibold text-gray-800 truncate group-hover:text-primary-700">
@@ -367,14 +365,15 @@ export const DashboardPage: React.FC = () => {
           </Card>
 
           {/* Quick Info Card */}
-          <div className="bg-gradient-to-br from-indigo-50 to-primary-50 border border-primary-100 rounded-xl p-5">
-            <div className="flex items-center gap-2 text-primary-800 font-semibold text-sm mb-2">
-              <CheckCircle2 className="w-4 h-4 text-primary-600" />
-              <span>Enterprise Guardrails</span>
-            </div>
-            <p className="text-xs text-gray-600 leading-relaxed">
-              All questions asked through Study Assistant are filtered through vector similarity gating. If reference material has insufficient evidence, the assistant clearly informs you instead of hallucinating.
+          <div className="dashboard-next">
+            <div className="dashboard-next-label">Up next</div>
+            <div className="mt-2 text-base font-semibold text-white">Shape your career direction</div>
+            <p className="mt-1 text-xs leading-relaxed text-green-100/80">
+              Keep your goals and roadmap in sync.
             </p>
+            <Link to="/career/profile">
+              Update career profile <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
         </div>
       </div>

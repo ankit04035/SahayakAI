@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { apiRequest, getBaseUrl, ApiError } from '../api/client';
+import { apiRequest, getBaseUrl, ApiError, setCsrfToken } from '../api/client';
 
 describe('API Client Unit Tests', () => {
   beforeEach(() => {
     localStorage.clear();
+    setCsrfToken(null);
     vi.restoreAllMocks();
   });
 
@@ -17,7 +18,7 @@ describe('API Client Unit Tests', () => {
     expect(url.endsWith('/api')).toBe(true);
   });
 
-  it('injects default X-User-Id from localStorage if present', async () => {
+  it('does not derive account identity from localStorage and includes session cookies', async () => {
     localStorage.setItem('sahayakai_user_id', '42');
 
     const fetchMock = vi.fn().mockResolvedValue({
@@ -34,11 +35,12 @@ describe('API Client Unit Tests', () => {
     const calledOptions = fetchMock.mock.calls[0][1];
 
     expect(calledUrl).toContain('/api/health');
-    expect(calledOptions.headers['X-User-Id']).toBe('42');
+    expect(calledOptions.headers['X-User-Id']).toBeUndefined();
     expect(calledOptions.headers['Content-Type']).toBe('application/json');
+    expect(calledOptions.credentials).toBe('include');
   });
 
-  it('defaults X-User-Id to 1 if localStorage is empty', async () => {
+  it('does not send an identity header when no account is selected', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
@@ -49,7 +51,7 @@ describe('API Client Unit Tests', () => {
     await apiRequest('/health');
 
     const calledOptions = fetchMock.mock.calls[0][1];
-    expect(calledOptions.headers['X-User-Id']).toBe('1');
+    expect(calledOptions.headers['X-User-Id']).toBeUndefined();
   });
 
   it('allows explicit userId override in RequestOptions', async () => {
@@ -86,7 +88,23 @@ describe('API Client Unit Tests', () => {
 
     const calledOptions = fetchMock.mock.calls[0][1];
     expect(calledOptions.headers['Content-Type']).toBeUndefined();
-    expect(calledOptions.headers['X-User-Id']).toBe('1');
+    expect(calledOptions.headers['X-User-Id']).toBeUndefined();
+  });
+
+  it('sends the in-memory CSRF token on state-changing requests', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: vi.fn().mockResolvedValue({ ok: true }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    setCsrfToken('csrf-test-token');
+
+    await apiRequest('/documents', { method: 'POST', body: JSON.stringify({ title: 'notes' }), userId: 7 });
+
+    const calledOptions = fetchMock.mock.calls[0][1];
+    expect(calledOptions.headers['X-User-Id']).toBe('7');
+    expect(calledOptions.headers['X-CSRF-Token']).toBe('csrf-test-token');
   });
 
   it('parses structured backend error envelope correctly on 404', async () => {

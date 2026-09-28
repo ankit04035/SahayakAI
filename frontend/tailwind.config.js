@@ -7,19 +7,29 @@ export default {
   theme: {
     extend: {
       colors: {
-        brand: {
-          50: '#eef2ff',
-          100: '#e0e7ff',
-          200: '#c7d2fe',
-          300: '#a5b4fc',
-          400: '#818cf8',
-          500: '#6366f1',
-          600: '#4f46e5',
-          700: '#4338ca',
-          800: '#3730a3',
-          900: '#312e81',
-          950: '#1e1b4b',
+        primary: {
+          50: '#edf5ef',
+          100: '#deece1',
+          200: '#c2dbc9',
+          300: '#97c2a4',
+          400: '#65a579',
+          500: '#43845e',
+          600: '#306e4c',
+          700: '#25593e',
+          800: '#214a36',
+          900: '#1b3a2d',
+          950: '#142b22',
         },
+      },
+      fontFamily: {
+        sans: ['DM Sans', 'Aptos', 'sans-serif'],
+        display: ['Instrument Serif', 'Georgia', 'serif'],
+      },
+      fontSize: {
+        '2xs': ['0.6875rem', { lineHeight: '1rem' }],
+      },
+      boxShadow: {
+        '2xs': '0 1px 2px rgb(22 37 31 / 0.05)',
       },
     },
   },

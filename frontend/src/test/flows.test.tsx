@@ -9,8 +9,16 @@ import { ResumePage } from '../pages/ResumePage';
 import { CareerProfilePage } from '../pages/CareerProfilePage';
 import { CareerRoadmapPage } from '../pages/CareerRoadmapPage';
 import { DashboardPage } from '../pages/DashboardPage';
+import { getCareerProfile } from '../api/career';
 
 // Mock API modules
+vi.mock('../api/auth', () => ({
+  getCurrentUser: vi.fn().mockResolvedValue({ id: 1, name: 'Student Test', email: 'student@example.com', created_at: '2026-09-23T00:00:00Z' }),
+  registerAccount: vi.fn(),
+  loginAccount: vi.fn(),
+  logoutAccount: vi.fn(),
+}));
+
 vi.mock('../api/documents', () => ({
   getDocuments: vi.fn().mockResolvedValue([
     {
@@ -232,7 +240,13 @@ describe('Frontend End-to-End Workflow Views', () => {
       expect(screen.getByText('Explain process states')).toBeInTheDocument();
       expect(screen.getByText(/Process states include Ready, Running, and Blocked/i)).toBeInTheDocument();
       expect(screen.getByText(/1 Grounding Source Citations/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Send message' })).toBeVisible();
+      expect(screen.getByText('Send')).toBeVisible();
     });
+
+    fireEvent.click(screen.getByRole('button', { name: /^New$/ }));
+    expect(await screen.findByRole('heading', { name: 'Start New Study Chat' })).toBeVisible();
+    expect(screen.getByRole('button', { name: /^Create Session$/ })).toBeVisible();
   });
 
   it('renders ResumePage with ATS Score and Matched vs Missing Skills', async () => {
@@ -251,6 +265,7 @@ describe('Frontend End-to-End Workflow Views', () => {
       expect(screen.getByText('Strong Match')).toBeInTheDocument();
       expect(screen.getByText('✓ Python')).toBeInTheDocument();
       expect(screen.getByText('+ Kubernetes')).toBeInTheDocument();
+      expect(screen.getByText('Targeted for "candidate_resume.pdf"')).toBeInTheDocument();
     });
   });
 
@@ -266,6 +281,22 @@ describe('Frontend End-to-End Workflow Views', () => {
     await waitFor(() => {
       expect(screen.getByDisplayValue('B.Tech CS')).toBeInTheDocument();
       expect(screen.getByText('Distributed Systems')).toBeInTheDocument();
+    });
+  });
+
+  it('uses a valid experience selection for a new career profile', async () => {
+    vi.mocked(getCareerProfile).mockRejectedValueOnce(new Error('Profile not found'));
+
+    render(
+      <MemoryRouter>
+        <UserProvider>
+          <CareerProfilePage />
+        </UserProvider>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('combobox', { name: /experience level/i })).toHaveValue('Beginner / Student');
     });
   });
 

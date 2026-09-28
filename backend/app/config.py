@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     APP_VERSION: str = Field(default="0.1.0", description="Application semantic version")
     ENVIRONMENT: str = Field(default="development", description="Deployment environment")
     LOG_LEVEL: str = Field(default="INFO", description="Logging level")
+    AUTH_REQUIRED: bool = Field(default=True, description="Require authenticated sessions for application APIs")
+    AUTH_COOKIE_SECURE: bool = Field(default=False, description="Mark authentication cookies Secure (enable for HTTPS)")
+    AUTH_SESSION_DAYS: int = Field(default=30, gt=0, le=365, description="Browser session lifetime in days")
 
     # Database
     DATABASE_URL: str = Field(

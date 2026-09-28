@@ -1,8 +1,8 @@
 # SahayakAI — AI-Powered Career & Academic Mentor
 
 [![Production: Deployed](https://img.shields.io/badge/Production-Deployed%20%26%20Verified-brightgreen.svg)]()
-[![Backend Tests: 236 Passed](https://img.shields.io/badge/Backend%20Tests-236%20Passed-brightgreen.svg)]()
-[![Frontend Tests: 19 Passed](https://img.shields.io/badge/Frontend%20Tests-19%20Passed-brightgreen.svg)]()
+[![Backend Tests: 240 Passed](https://img.shields.io/badge/Backend%20Tests-240%20Passed-brightgreen.svg)]()
+[![Frontend Tests: 21 Passed](https://img.shields.io/badge/Frontend%20Tests-21%20Passed-brightgreen.svg)]()
 [![Security: 23/23 Gates Passed](https://img.shields.io/badge/Security-23%2F23%20Gates%20Passed-brightgreen.svg)]()
 [![Python: 3.12.2](https://img.shields.io/badge/Python-3.12.2-blue.svg)]()
 [![FastAPI: 0.115](https://img.shields.io/badge/FastAPI-0.115-teal.svg)]()
@@ -35,7 +35,8 @@
   - **Database Target**: Managed **PostgreSQL** with `psycopg2-binary` driver and automatic schema creation
   - **Storage Target**: Render Persistent Disk (`/var/data/uploads`) for durable PDF/TXT document and resume storage
   - **Live Verification**: `scripts/verify_production.py` passing 12 / 12 production gates (100% green)
-  - **Test Baselines**: 236 / 236 Backend tests passing, 19 / 19 Frontend tests passing, zero build errors
+  - **Test Baselines**: 240 / 240 Backend tests passing, 21 / 21 Frontend tests passing, zero build errors
+  - **Accounts**: Secure registration and sign-in with scrypt password hashes, HttpOnly sessions, CSRF protection, and per-account resource isolation
   - **Dual-Directory Parity**: 100% SHA-256 match between root and `SahayakAI/`
 
 ---
@@ -81,6 +82,7 @@ python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
 - API Health: `http://127.0.0.1:8000/api/health`
 - Swagger UI: `http://127.0.0.1:8000/docs`
 - ReDoc: `http://127.0.0.1:8000/redoc`
+- `AUTH_REQUIRED=true` is enabled by default. The local frontend uses a same-origin Vite API proxy for session cookies.
 
 ### 2. Run the Frontend Application
 ```powershell
@@ -89,13 +91,15 @@ npm install
 npm run dev
 ```
 - Application UI: `http://localhost:5173`
+- Register on first visit or sign in with an existing account. Passwords must be at least 12 characters.
+- Account sessions are HttpOnly and revocable; passwords are never stored in plaintext.
 
 ### 3. Run Test Suites & Verifications
 ```powershell
-# Backend Regression Suite (236 tests)
+# Backend Regression Suite (240 tests)
 pytest -v
 
-# Frontend Test Suite (19 tests)
+# Frontend Test Suite (21 tests)
 cd frontend
 npm test -- --run
 

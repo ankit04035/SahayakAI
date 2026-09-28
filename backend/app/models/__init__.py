@@ -4,7 +4,7 @@ Exports all application database models and registers them with Base metadata.
 """
 
 from backend.app.models.base import TimestampMixin, utc_now
-from backend.app.models.user import User
+from backend.app.models.user import AuthSession, User, UserCredential
 from backend.app.models.document import Document, DocumentChunk
 from backend.app.models.chat import ChatSession, ChatMessage
 from backend.app.models.resume import Resume, ResumeAnalysis
@@ -14,6 +14,8 @@ __all__ = [
     "TimestampMixin",
     "utc_now",
     "User",
+    "UserCredential",
+    "AuthSession",
     "Document",
     "DocumentChunk",
     "ChatSession",

@@ -1,6 +1,11 @@
 import { ApiErrorEnvelope } from '../types/api';
 
-const DEFAULT_BASE_URL = 'http://localhost:8000/api';
+const DEFAULT_BASE_URL = '/api';
+let csrfToken: string | null = null;
+
+export function setCsrfToken(token: string | null): void {
+  csrfToken = token;
+}
 
 export function getBaseUrl(): string {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
@@ -38,28 +43,30 @@ export async function apiRequest<T>(endpoint: string, options: RequestOptions = 
   const headers: Record<string, string> = {
     ...(options.headers as Record<string, string> || {}),
   };
+  const method = (options.method || 'GET').toUpperCase();
 
-  // Add default dev X-User-Id if specified or stored
+  // Authenticated screens provide the session's user ID explicitly.
   if (options.userId !== undefined) {
     headers['X-User-Id'] = String(options.userId);
-  } else {
-    const storedUser = localStorage.getItem('sahayakai_user_id') || '1';
-    headers['X-User-Id'] = storedUser;
   }
 
   // Set Content-Type only if body is NOT FormData
   if (!(options.body instanceof FormData) && !headers['Content-Type']) {
     headers['Content-Type'] = 'application/json';
   }
+  if (csrfToken && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method) && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/register')) {
+    headers['X-CSRF-Token'] = csrfToken;
+  }
 
   try {
     const response = await fetch(url, {
       ...options,
       headers,
+      credentials: 'include',
     });
 
     if (!response.ok) {
-      let errorEnvelope: ApiErrorEnvelope | null = null;
+      let errorEnvelope: (ApiErrorEnvelope & { detail?: string }) | null = null;
       try {
         errorEnvelope = await response.json();
       } catch {
@@ -73,6 +80,10 @@ export async function apiRequest<T>(endpoint: string, options: RequestOptions = 
           errorEnvelope.message || `Request failed with status ${response.status}`,
           errorEnvelope.details
         );
+      }
+
+      if (errorEnvelope && typeof errorEnvelope.detail === 'string') {
+        throw new ApiError(response.status, `HTTP_${response.status}`, errorEnvelope.detail);
       }
 
       throw new ApiError(

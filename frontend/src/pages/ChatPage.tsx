@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { useLocation } from 'react-router-dom';
 import {
   MessageSquare,
@@ -219,7 +220,7 @@ export const ChatPage: React.FC = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-8.5rem)] flex flex-col md:flex-row bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+    <div className="chat-workspace h-[calc(100vh-8.5rem)] flex flex-col md:flex-row bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
       {/* Left Sidebar: Session List */}
       <div className="w-full md:w-80 border-r border-gray-200 flex flex-col bg-gray-50/50 shrink-0">
         <div className="p-4 border-b border-gray-200 flex items-center justify-between">
@@ -389,7 +390,13 @@ export const ChatPage: React.FC = () => {
                               : 'bg-white text-gray-900 border border-gray-200 rounded-tl-none shadow-2xs'
                           }`}
                         >
-                          <p className="whitespace-pre-wrap">{msg.content}</p>
+                          {isUser ? (
+                            <p className="whitespace-pre-wrap">{msg.content}</p>
+                          ) : (
+                            <div className="chat-markdown">
+                              <ReactMarkdown>{msg.content}</ReactMarkdown>
+                            </div>
+                          )}
                         </div>
 
                         {/* Insufficient Evidence Notice */}
@@ -491,9 +498,12 @@ export const ChatPage: React.FC = () => {
                   type="submit"
                   isLoading={sending}
                   disabled={!inputMessage.trim()}
-                  className="h-11 px-4 rounded-xl shrink-0"
+                  aria-label="Send message"
+                  title="Send message"
+                  className="chat-send-button h-11 px-4 rounded-lg shrink-0"
                 >
                   <Send className="w-4 h-4" />
+                  <span>Send</span>
                 </Button>
               </form>
             </div>

@@ -29,13 +29,13 @@ export const Card: React.FC<CardProps> = ({
 
   return (
     <div
-      className={`bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden ${
+      className={`bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden ${
         hoverEffect ? 'hover:shadow-md transition-shadow duration-200' : ''
       } ${className}`}
       {...props}
     >
       {(title || action) && (
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-4">
+        <div className="card-heading px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-4">
           <div>
             {typeof title === 'string' ? (
               <h3 className="text-base font-semibold text-gray-900">{title}</h3>
