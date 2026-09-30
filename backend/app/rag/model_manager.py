@@ -6,8 +6,10 @@ dimension verification, and metadata reporting for embedding models.
 
 import logging
 import threading
-from typing import Any, Dict, Optional
-from sentence_transformers import SentenceTransformer
+from typing import TYPE_CHECKING, Any, Dict, Optional
+
+if TYPE_CHECKING:
+    from sentence_transformers import SentenceTransformer
 
 from backend.app.config import get_settings
 from backend.app.rag.exceptions import EmbeddingModelLoadError
@@ -56,6 +58,7 @@ class EmbeddingModelManager:
             logger.info("Loading SentenceTransformer model '%s' on device '%s'...", model_name, device)
 
             try:
+                from sentence_transformers import SentenceTransformer
                 model = SentenceTransformer(
                     model_name_or_path=model_name,
                     device=device,
