@@ -6,6 +6,7 @@ and transactional database persistence.
 """
 
 import logging
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 import fitz  # PyMuPDF
@@ -93,7 +94,10 @@ def process_document_upload(
         resolved_user_id = user_id
 
     # 3. Safe Storage
-    upload_dir = Path(settings.UPLOAD_DIR)
+    if os.environ.get("VERCEL") == "1":
+        upload_dir = Path("/tmp")
+    else:
+        upload_dir = Path(settings.UPLOAD_DIR)
     upload_dir.mkdir(parents=True, exist_ok=True)
 
     safe_original_name = sanitize_filename(original_filename)
@@ -311,7 +315,8 @@ def delete_document(
 
     # Attempt to delete file from disk
     try:
-        storage_path = get_safe_storage_path(settings.UPLOAD_DIR, doc.stored_filename)
+        base_dir = Path("/tmp") if os.environ.get("VERCEL") == "1" else Path(settings.UPLOAD_DIR)
+        storage_path = get_safe_storage_path(base_dir, doc.stored_filename)
         if storage_path.exists():
             storage_path.unlink()
     except Exception as err:

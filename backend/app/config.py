@@ -5,7 +5,7 @@ Provides typed, validated settings loaded from environment variables and .env fi
 
 from functools import lru_cache
 from typing import List, Union
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -217,6 +217,12 @@ class Settings(BaseSettings):
             if val:
                 return val
         return "demo"
+
+    @model_validator(mode="after")
+    def validate_production_db(self) -> "Settings":
+        if self.ENVIRONMENT == "production" and self.DATABASE_URL.startswith("sqlite"):
+            raise ValueError("SQLite is not allowed in production environment. Use PostgreSQL.")
+        return self
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -6,6 +6,7 @@ match score calculation, and recommendation synthesis.
 """
 
 import logging
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 import fitz  # PyMuPDF
@@ -64,7 +65,10 @@ def create_resume_upload(
             resolved_user_id = user_id
 
     # 3. Safe Storage
-    upload_dir = Path(settings.UPLOAD_DIR) / "resumes"
+    if os.environ.get("VERCEL") == "1":
+        upload_dir = Path("/tmp") / "resumes"
+    else:
+        upload_dir = Path(settings.UPLOAD_DIR) / "resumes"
     upload_dir.mkdir(parents=True, exist_ok=True)
 
     safe_original_name = sanitize_filename(original_filename)
@@ -132,7 +136,8 @@ def delete_resume(db: Session, resume_id: int, user_id: Optional[int] = None) ->
     """
     resume = get_resume(db=db, resume_id=resume_id, user_id=user_id)
     settings = get_settings()
-    storage_path = Path(settings.UPLOAD_DIR) / "resumes" / resume.stored_filename
+    base_dir = Path("/tmp") if os.environ.get("VERCEL") == "1" else Path(settings.UPLOAD_DIR)
+    storage_path = base_dir / "resumes" / resume.stored_filename
 
     if storage_path.exists():
         try:
@@ -151,7 +156,8 @@ def extract_resume_text(resume: Resume) -> str:
     Extract and clean raw text from persisted resume file (reusing PyMuPDF / text decoder).
     """
     settings = get_settings()
-    storage_path = Path(settings.UPLOAD_DIR) / "resumes" / resume.stored_filename
+    base_dir = Path("/tmp") if os.environ.get("VERCEL") == "1" else Path(settings.UPLOAD_DIR)
+    storage_path = base_dir / "resumes" / resume.stored_filename
 
     if not storage_path.exists():
         raise ResumeProcessingError(f"Resume file '{resume.stored_filename}' not found on storage disk.")
