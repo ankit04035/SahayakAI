@@ -3,6 +3,7 @@ Sentence Transformer Model Manager.
 Handles lazy loading, in-process caching, device configuration,
 dimension verification, and metadata reporting for embedding models.
 """
+from __future__ import annotations
 
 import logging
 import threading
